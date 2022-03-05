@@ -1,7 +1,7 @@
 {
   "name": "badass-cookies",
   "version": "1.0.0",
-  "description": "## Dependencies - nodejs - supabase",
+  "description": "A telegram bot to help you stay motivated.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -11,7 +11,7 @@
     "url": "git+https://github.com/mayanksharma91/badass-cookies.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "Mayank Sharma",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/mayanksharma91/badass-cookies/issues"
