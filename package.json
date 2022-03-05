@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/mayanksharma91/badass-cookies/issues"
   },
-  "homepage": "https://github.com/mayanksharma91/badass-cookies#readme"
+  "homepage": "https://github.com/mayanksharma91/badass-cookies#readme",
+  "dependencies": {
+    "dotenv": "^16.0.0"
+  }
 }
