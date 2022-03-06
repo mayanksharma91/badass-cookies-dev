@@ -13,7 +13,7 @@ Context {
       }
     },
     tg: Telegram {
-      token: '5138955779:AAESwoFHfDp3qyLpv75HhGF1Wqt-SrT64PQ',
+      token: '',
       response: undefined,
       options: {
         apiRoot: 'https://api.telegram.org',
