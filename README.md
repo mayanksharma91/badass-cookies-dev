@@ -20,3 +20,15 @@
 
 - `npm install @supabase/supabase-js`
     - Installs supabase-js and creates a client
+
+
+
+## DEBUGGING
+  <!-- Response to current version of code -->
+  --- ~/badass-cookies ‹main* M› » node index.js                                    130 ↵
+cookie_text:{}
+[
+  {
+    text: 'I set up git on my WSL VS Code and created a repo. It took a TON of time to figure out how to resolve a conflict. But now I am ready to code!'
+  }
+]

@@ -58,10 +58,14 @@ bot.hears(`cookie please`, (ctx, next) => {
                 console.error(error)
                 return
             }
-        return data[0].text
+        console.log(data)
+        return data
     }
     const cookie = get_cookie()
-    ctx.reply("Cookie:\n"+cookie);
+    const cookie_text = JSON.stringify(cookie)
+    console.log("cookie_text:" + cookie_text)
+    // console.log("Cookie:\n" + cookie_text)
+    ctx.reply("Cookie:\n" + cookie_text);
     next(ctx);
 }) 
 
