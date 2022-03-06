@@ -4,9 +4,11 @@ require('dotenv').config();
 // console.log(process.env)
 
 // Require Telegraf package by creating a telegraf object
-// Constructor functions generally start with an upper case letter
-// TODO understand why we need the curly braces in const {Telegraph}
 const {Telegraf} = require('telegraf');
+// Educational note:
+// Constructor functions generally start with an upper case letter
+// You need curly braces here since you're destructuring the object
+// read more here - https://stackoverflow.com/questions/38660022/curly-brackets-braces-in-node-js-require-statement
 
 // creating a bot from the telegraf package
 const bot = new Telegraf(process.env.BOT_API_KEY);
@@ -58,8 +60,8 @@ bot.start((ctx) => {
     // if exists, do nothing
     // if new user, show welcome message
     ctx.reply(`
-    Welcome to your Badass Cookie Jar!
-    Your wins, big and small, are cookies.
+    > Welcome to your Badass Cookie Jar!
+    > Your wins, big and small, are cookies.
     Add them by typing **add cookie**
     
     When you're feeling down request a cookie by typing **cookie please**
