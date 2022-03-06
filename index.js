@@ -37,23 +37,22 @@ bot.use((ctx, next) =>{
 bot.hears(`cookie please`, (ctx) => {
     ctx.reply(`Cookie:
     You did a gereat job with xyz!`);
-    next
+    next(ctx);
 })
 
 // Add cookie
 bot.hears(`add cookie`, (ctx) => {
     ctx.reply(`Cookie added! Great job :)`);
+    next(ctx);
 })
 
 
 // ##########
 // CORE COMMANDS
-// I have not configured them to pass on ctx to the next handler
-// Hence, they are at the end of our script
 // ##########
 
 // Create a handler for the /start command
-bot.start((ctx) => {
+bot.start((ctx, next) => {
     // Check if username is in database
     // ctx.botinfo.username 
 
@@ -61,28 +60,33 @@ bot.start((ctx) => {
     // if new user, show welcome message
     ctx.reply(`
 Welcome to your Badass Cookie Jar!
-Your wins, big and small, are cookies.
-Add them by typing **add cookie**
-    
-When you're feeling down request a cookie by typing **cookie please**
-    
-Read cookie.
+Your wins are cookies.
+
+When you're feeling down, do the following:
+Read a cookie.
 Feel amazing.
 Resume badassery!`,{
         parse_mode: 'Markdown'
     });
-
+    next(ctx);
 })
 
 // Create a handler for the /help command
-bot.help((ctx) => {
-    ctx.reply(`I'm happy to help!`);
+bot.help((ctx, next) => {
+    ctx.reply(`
+Your wins, big and small, are cookies.
+Add them by typing **add cookie**
+    
+When you're feeling down request a cookie by typing **cookie please**
+`);
+    next(cxt);
 })
 
 // Create a handler for the /settings command
 
-bot.settings((ctx) =>{
+bot.settings((ctx, next) =>{
     ctx.reply(`It's YOUR cookie jar. Set it up how you need it!`);
+    next(ctx);
 })
 
 
