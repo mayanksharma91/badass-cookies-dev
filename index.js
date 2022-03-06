@@ -60,16 +60,16 @@ bot.start((ctx) => {
     // if exists, do nothing
     // if new user, show welcome message
     ctx.reply(`
-    > Welcome to your Badass Cookie Jar!
-    > Your wins, big and small, are cookies.
-    Add them by typing **add cookie**
+Welcome to your Badass Cookie Jar!
+Your wins, big and small, are cookies.
+Add them by typing **add cookie**
     
-    When you're feeling down request a cookie by typing **cookie please**
+When you're feeling down request a cookie by typing **cookie please**
     
-    Read cookie.
-    Feel amazing.
-    Resume badassery!`,{
-        parse_mode: 'MarkdownV2'
+Read cookie.
+Feel amazing.
+Resume badassery!`,{
+        parse_mode: 'Markdown'
     });
 
 })
