@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/mayanksharma91/badass-cookies#readme",
   "dependencies": {
+    "@supabase/supabase-js": "^1.30.7",
     "dotenv": "^16.0.0",
     "telegraf": "^4.7.0"
   }

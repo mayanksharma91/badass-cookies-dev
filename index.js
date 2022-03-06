@@ -1,7 +1,15 @@
+// ###                   ###
+//!### SETTING IT ALL UP ###
+// ###                   ###
 // Require dotenv package that will help read API keys from the .env file
 // The browser does not support process.env, hence we need dotenv
 require('dotenv').config();
 // console.log(process.env)
+
+// Require Supabase package by creating a Suparbase Client
+const { createClient } = require('@supabase/supabase-js')
+// Create a single supabase client for interacting with your database
+const supabase = createClient(process.env.SUPABASE_API_URL, process.env.SUPBASE_PUBLIC_ANON_API_KEY)
 
 // Require Telegraf package by creating a telegraf object
 const {Telegraf} = require('telegraf');
@@ -13,25 +21,26 @@ const {Telegraf} = require('telegraf');
 // creating a bot from the telegraf package
 const bot = new Telegraf(process.env.BOT_API_KEY);
 
-// ##########
-// NOTES
-// passing next allows the ctx object ot be passed from one handler to the next
-// you can then modify the object like adding states to its `state` prperty
-// ##########
 
+
+// ###               ###
+//!### CODING BEGINS ###
+// ###               ###
+
+
+// ### IDENTIFY USER ###
 // Log user state within the state property of the ctx object
 bot.use((ctx, next) =>{
     // TODO check if user already exists
     ctx.state.isUser = 1;
     next(ctx);
 })
+// Educational note:
+// next(cxt) passes cxt object the next handler so you can modify properties like `state`
 
-// ##########
-// TEXT COMMANDS - HEARS
-// These commands are in normal text using hears
-// NOTE: if I want hears to work in a group chat,
-// I need to disable privacy for the bot from bot father
-// ##########
+// ### TEXT COMMANDS ###
+// Normal text commands handled be `hears`
+// NOTE: to user hear in a group chat, disable bot from bot father
 
 // Request cookie
 bot.hears(`cookie please`, (ctx) => {
@@ -47,9 +56,7 @@ bot.hears(`add cookie`, (ctx) => {
 })
 
 
-// ##########
-// CORE COMMANDS
-// ##########
+// ### CORE COMMANDS ###
 
 // Create a handler for the /start command
 bot.start((ctx, next) => {
@@ -94,5 +101,5 @@ bot.settings((ctx, next) =>{
 
 
 
-
+// Launch bot
 bot.launch()
