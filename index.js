@@ -9,7 +9,7 @@ require('dotenv').config();
 // Require Supabase package by creating a Suparbase Client
 const { createClient } = require('@supabase/supabase-js')
 // Create a single supabase client for interacting with your database
-const supabase = createClient(process.env.SUPABASE_API_URL, process.env.SUPBASE_PUBLIC_ANON_API_KEY)
+const supabase = createClient(process.env.SUPABASE_API_URL, process.env.SUPABASE_PUBLIC_ANON_API_KEY)
 
 // Require Telegraf package by creating a telegraf object
 const {Telegraf} = require('telegraf');
@@ -29,6 +29,7 @@ const bot = new Telegraf(process.env.BOT_API_KEY);
 
 
 // ### IDENTIFY USER ###
+
 // Log user state within the state property of the ctx object
 bot.use((ctx, next) =>{
     // TODO check if user already exists
@@ -38,19 +39,34 @@ bot.use((ctx, next) =>{
 // Educational note:
 // next(cxt) passes cxt object the next handler so you can modify properties like `state`
 
+
+
 // ### TEXT COMMANDS ###
+
 // Normal text commands handled be `hears`
 // NOTE: to user hear in a group chat, disable bot from bot father
 
 // Request cookie
-bot.hears(`cookie please`, (ctx) => {
-    ctx.reply(`Cookie:
-    You did a gereat job with xyz!`);
+bot.hears(`cookie please`, (ctx, next) => {
+    const get_cookie = async() =>  {
+        let {data , error} = await supabase
+            .from('cookies')
+            .select('text')
+            .eq('id','1');
+        
+            if (error) {
+                console.error(error)
+                return
+            }
+        return data[0].text
+    }
+    const cookie = get_cookie()
+    ctx.reply("Cookie:\n"+cookie);
     next(ctx);
-})
+}) 
 
 // Add cookie
-bot.hears(`add cookie`, (ctx) => {
+bot.hears(`add cookie`, (ctx, next) => {
     ctx.reply(`Cookie added! Great job :)`);
     next(ctx);
 })
@@ -90,7 +106,6 @@ When you're feeling down request a cookie by typing **cookie please**
 })
 
 // Create a handler for the /settings command
-
 bot.settings((ctx, next) =>{
     ctx.reply(`It's YOUR cookie jar. Set it up how you need it!`);
     next(ctx);
@@ -101,5 +116,5 @@ bot.settings((ctx, next) =>{
 
 
 
-// Launch bot
+// ### LAUNCH BOT ###
 bot.launch()

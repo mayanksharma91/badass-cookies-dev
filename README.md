@@ -3,7 +3,7 @@
 ## Dependencies
 - npm (used 8.5.2)
 - nodejs (used v16.14.0)
-- supabase
+- supabase-js
 - telegraf
 
 
@@ -17,3 +17,6 @@
 
 - `npm isntall telegraf --save`
     - Installs a package library for Telegram and adds it to the package.json dependencies
+
+- `npm install @supabase/supabase-js`
+    - Installs supabase-js and creates a client
