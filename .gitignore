@@ -1,5 +1,8 @@
 # https://help.github.com/ignore-files
 
+# custom files for texting things
+ctx_sample.md
+
 # dotenv environment variable files
 .env
 .env.development.local
