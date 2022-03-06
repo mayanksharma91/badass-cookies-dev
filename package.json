@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/mayanksharma91/badass-cookies#readme",
   "dependencies": {
-    "dotenv": "^16.0.0"
+    "dotenv": "^16.0.0",
+    "telegraf": "^4.7.0"
   }
 }
