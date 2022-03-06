@@ -1,18 +1,43 @@
 // Require dotenv package that will help read API keys from the .env file
 // The browser does not support process.env, hence we need dotenv
 require('dotenv').config()
-console.log(process.env)  // remove this after you've confirmed it working
+// console.log(process.env)
 
 // Require Telegraf package by creating a telegraf object
-const Telegraf = require('telegraf')
+// Constructor functions generally start with an upper case letter
+// TODO understand why we need the curly braces in const {Telegraph}
+const {Telegraf} = require('telegraf')
 
 // creating a bot from the telegraf package
-const bot = new Telegraf('$BOT_API_KEY')
+const bot = new Telegraf(process.env.BOT_API_KEY)
 
 // middleware
-bot.use((ctx) => {
-    ctx.reply("Welcome to your Badass Cookie Jar!")
+// TODO Add welcome message
+
+// Writing a handler for the /start command
+// TODO get Telegram username and check if the user already exists
+bot.start((ctx) => {
+    // Check if username is in database
+    // ctx.botinfo.username 
+
+    // if exists, do nothing
+    // if new user, show welcome message
+    ctx.reply(`Welcome to your Badass Cookie Jar!
+    Your wins, big and small, are cookies.
+    Add them by typing add cookie
+    When you're feeling down, have a cookie.
+    Request a cookie by typign cookie please
+    Resume your badassery!`)
+
+    console.log(ctx)
 })
 
+bot.help((ctx) => {
+    ctx.reply(`I'm happy to help!`)
+})
+
+bot.settings((ctx) =>{
+    ctx.reply(`It's YOUR cookie jar. Set it up how you need it!`)
+})
 
 bot.launch()
