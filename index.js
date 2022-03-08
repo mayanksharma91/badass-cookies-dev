@@ -53,7 +53,7 @@ const arrCookiePleasePhrases = [`cookie please`, `cookie`, `cookie plz`,`cookie 
 bot.hears(arrCookiePleasePhrases, (ctx, next) => {
     // creating a wrapping function so we have an async context
     const get_cookie = async() =>  {
-        const {data , error} = await supabase
+        const {data: cookies , error} = await supabase
             .from('cookies')
             .select('text')
             .eq('id','1');
@@ -62,12 +62,10 @@ bot.hears(arrCookiePleasePhrases, (ctx, next) => {
             console.error(error)
             return
         }
-        
-        return data
+        return cookies
     }
-    const cookie_text = get_cookie().then(data => {
-        console.log(data[0]['text'])
-        const cookie_string = data[0]['text'];
+        get_cookie().then(cookies => {
+        const cookie_string = cookies[0]['text'];
         // Educational note:
         // Use then to perform actions, you can chain then if needed
         ctx.reply(`Cookie:
