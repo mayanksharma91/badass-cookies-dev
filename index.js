@@ -122,10 +122,23 @@ bot.settings((ctx, next) =>{
 })
 
 
-
-
+// Custom command
+bot.command("add", (ctx) => {
+    ctx.telegram.sendMessage(ctx.chat.id, `What kind of cookie?`,{
+        reply_markup: {
+            keyboard: [
+                [
+                    {text: "add mini cookie"},
+                    {text: "add cookie"}]
+            ],
+            resize_keyboard: true,
+            one_time_keyboard: true
+        }
+    })
+})
 
 
 // ### LAUNCH BOT ###
 console.log(`bot started`)
 bot.launch()
+
