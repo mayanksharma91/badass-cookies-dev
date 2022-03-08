@@ -47,25 +47,33 @@ bot.use((ctx, next) =>{
 // NOTE: to user hear in a group chat, disable bot from bot father
 
 // Request cookie
-bot.hears(`cookie please`, (ctx, next) => {
+const arrCookiePleasePhrases = [`cookie please`, `cookie`, `cookie plz`,`cookie pls`,
+`Cookie please`, `Cookie`,`Cookie plz`, `Cookie pls`]
+
+bot.hears(arrCookiePleasePhrases, (ctx, next) => {
+    // creating a wrapping function so we have an async context
     const get_cookie = async() =>  {
-        let {data , error} = await supabase
+        const {data , error} = await supabase
             .from('cookies')
             .select('text')
             .eq('id','1');
         
-            if (error) {
-                console.error(error)
-                return
-            }
-        console.log(data)
+        if (error) {
+            console.error(error)
+            return
+        }
+        
         return data
     }
-    const cookie = get_cookie()
-    const cookie_text = JSON.stringify(cookie)
-    console.log("cookie_text:" + cookie_text)
-    // console.log("Cookie:\n" + cookie_text)
-    ctx.reply("Cookie:\n" + cookie_text);
+    const cookie_text = get_cookie().then(data => {
+        console.log(data[0]['text'])
+        const cookie_string = data[0]['text'];
+        // Educational note:
+        // Use then to perform actions, you can chain then if needed
+        ctx.reply(`Cookie:
+        ${cookie_string}`)
+        return cookie_string;
+    });
     next(ctx);
 }) 
 
@@ -106,7 +114,7 @@ Add them by typing **add cookie**
     
 When you're feeling down request a cookie by typing **cookie please**
 `);
-    next(cxt);
+    next(ctx);
 })
 
 // Create a handler for the /settings command
@@ -121,4 +129,5 @@ bot.settings((ctx, next) =>{
 
 
 // ### LAUNCH BOT ###
+console.log(`bot started`)
 bot.launch()
