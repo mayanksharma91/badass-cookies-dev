@@ -47,6 +47,8 @@ const get_user_id_from_supabase = async(user_id) =>  {
 // Educational note:
 // next(cxt) passes cxt object the next handler so you can modify properties like `state`
 bot.use((ctx, next) =>{
+    console.log(ctx.state);
+    console.log(`Entered use handler - IsUser: ${ctx.state.isUser}`);
     // check if user already exists
     if (ctx.state.isUser == 1){
         //do nothing
@@ -54,25 +56,33 @@ bot.use((ctx, next) =>{
     } else {
             // TODO same code block also in start command, do something
             // if id is not in table, add it to table
-            const inser_user_id = async() => {
+            const insert_user_id = async() => {
                 const { data, error } = await supabase
                     .from('user_details')
                     .insert([
                         {
-                            user_id_telegram: ctx.id,
+                            user_id_telegram: `${ctx.id}`,
                             username_telegram: ctx.username,
                             first_name_telegram: ctx.first_name,
                             last_name_telegram: ctx.last_name,
                             type_telegram: ctx.type
                         }
                     ])
+                if (error) {
+                    console.error(error)
+                    return
+                }
+                return data
+
             }        
             // set ctx state
-            ctx.state.isUser == 1
-            console.log(`user entry added`)
-            }
+            insert_user_id().then(res => {
+                ctx.state.isUser == 1;
+                console.log(`USE HANDLER: user entry added: ${res}`)
+            });
+    }
     next(ctx);
-})
+});
 
 // ### TEXT COMMANDS ###
 // Normal text commands handled with `hears`
@@ -101,7 +111,7 @@ bot.hears(arrCookiePleasePhrases, (ctx, next) => {
         // Educational note:
         // Use then to perform actions, you can chain then if needed
         ctx.reply(`Cookie:
-        ${cookie_string}`)
+${cookie_string}`);
         return cookie_string;
     });
     next(ctx);
@@ -125,16 +135,14 @@ bot.hears(arrAddCookieRegEx, (ctx, next) => {
         if (stringMatches.length == 0 && value.test(stringMessage))  {
             // we have a match and have not found a cookie before
             stringMatches.push(stringMessage.replace(value,""));
-            console.log(stringMatches);
         }
     })
-    
     // insert cookie to cookies table in Supabase
-    const inser_user_id = async() => {
+    const insert_cookie = async() => {
         const { data, error } = await supabase
-        .from('cookies')
-        .insert([
-            {
+            .from('cookies')
+            .insert([
+                {
                 text: stringMatches[0],
                 // TODO make weight and type customizable based on cookie type
                 // weight: ctx.username,
@@ -143,25 +151,35 @@ bot.hears(arrAddCookieRegEx, (ctx, next) => {
                 // type_custom_1: ;
                 // type_custom_2: ;
                 // type_custom_3: 
-            }
-        ])
-        // send reply
-        // Note: Want to send  stringMatches data in ctx.reply
-        // hence it was called within async 
-        // TODO differentiate between cookie types
-            ctx.reply(`Cookie added! Great job :)
+                }
+            ])
+        if (error) {
+            console.error(`Error while inserting cookie: ${error[0]}`);
+            return;
+        }
+        return data;
+    }
+    insert_cookie().then(data => {
+    // send reply
+    // Note: Want to send  stringMatches data in ctx.reply
+    // hence it was called within async
+    console.log(data); 
+    // TODO differentiate between cookie types
+    ctx.reply(`Cookie added! Great job :)
 
 Cookie:
 ${stringMatches[0]}`);
-    }
+    // pass the context only after the data has been submitted
     next(ctx);
-})
+    });
+});
 
 
 // ### CORE COMMANDS ###
 
 // Create a handler for the /start command
 bot.start((ctx, next) => {
+    console.log(`START HANDLER ENTERED`);
     // TODO Check if username is in database
     get_user_id_from_supabase(ctx.id).then(user_id_telegram =>{
         // if the id exists in the supabase table
