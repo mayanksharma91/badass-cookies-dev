@@ -46,7 +46,7 @@ bot.use((ctx, next) =>{
 // Normal text commands handled be `hears`
 // NOTE: to user hear in a group chat, disable bot from bot father
 
-// Request cookie
+// ### Request cookie
 const arrCookiePleasePhrases = [`cookie please`, `cookie`, `cookie plz`,`cookie pls`,
 `Cookie please`, `Cookie`,`Cookie plz`, `Cookie pls`]
 
@@ -75,9 +75,28 @@ bot.hears(arrCookiePleasePhrases, (ctx, next) => {
     next(ctx);
 }) 
 
-// Add cookie
-bot.hears(`add cookie`, (ctx, next) => {
-    ctx.reply(`Cookie added! Great job :)`);
+// ### Add cookie
+// Array of regular expressions
+// Edu Note: i means case insensitive and / something / is a regex literal in ES6
+
+let arrAddCookieRegEx = [/^add cookie \b/i, /^add mini cookie \b/i];
+arrAddCookieRegEx.push(/^add big cookie \b/i)
+
+bot.hears(arrAddCookieRegEx, (ctx, next) => {
+    // to store the extracted matches
+    let stringMatches = [];
+    arrAddCookieRegEx.forEach((value) => {
+        const stringMessage= ctx.message.text;
+        if (stringMatches.length == 0 && value.test(stringMessage))  {
+            // we have a match and have not found a cookie before
+            stringMatches.push(stringMessage.replace(value,""));
+            console.log(stringMatches);
+        }
+    })
+    // send reply
+    ctx.reply(`Cookie added! Great job :)
+Cookie: ${stringMatches[0]}`);
+
     next(ctx);
 })
 
@@ -139,6 +158,6 @@ bot.command("add", (ctx) => {
 
 
 // ### LAUNCH BOT ###
-console.log(`bot started`)
+console.log(`##### BOT STARTED #####`)
 bot.launch()
 
