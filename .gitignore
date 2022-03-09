@@ -1,8 +1,11 @@
 # https://help.github.com/ignore-files
 
-# custom files for texting things
+# custom files for remebering things
 ctx_sample.md
+
+# vs code files
 badass-cookies.code-workspace
+Spotify
 
 # dotenv environment variable files
 .env
