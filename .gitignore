@@ -2,6 +2,7 @@
 
 # custom files for texting things
 ctx_sample.md
+badass-cookies.code-workspace
 
 # dotenv environment variable files
 .env
@@ -9,6 +10,7 @@ ctx_sample.md
 .env.test.local
 .env.production.local
 .env.local
+
 # Logs
 logs
 *.log
