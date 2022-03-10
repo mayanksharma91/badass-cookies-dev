@@ -123,7 +123,7 @@ ${cookie_string}`);
 // Edu Note: In RegEx, i means case insensitive and / something / is a regex literal in ES6
 // Array of regular expressions for the handler
 let arrAddCookieRegEx = [/^add cookie \b/i, /^add mini cookie \b/i];
-arrAddCookieRegEx.push(/^add big cookie \b/i)
+arrAddCookieRegEx.push(/^add mega cookie \b/i)
 
 // Iterate over each regex to find which trigger worked
 bot.hears(arrAddCookieRegEx, (ctx, next) => {
@@ -261,3 +261,38 @@ bot.settings((ctx, next) =>{
 // ### LAUNCH BOT ###
 console.log(`##### BOT STARTED #####`)
 bot.launch()
+
+//! ### To do list for MVP - prioritized
+// ---- Randomization of cookie please
+// PostgreSQL function that returns setof all cookie_id and weights for a user
+//      - quest_name is optional, takes default value of all
+// For each cookie in array, ensure number of entries of that cookie == weight 
+//      - eg. if weight is 2, add another row with same cookie_id and weight 1
+// Generate random number between 0 (first cookie_id) to n (last cookie of set)
+//      - this is the cookie_id that is returned to the javascript promise
+//
+// ---- Edit cookie weight
+// PostgreSQL function to increment weight of latest added cookie for user
+// 
+// ---- Deploy on Herkou
+//      - see youtube video 
+//      - remember to use dotenv (must) and pm2 (optional) 
+//
+// ---- Set up unicornplatform website
+//      - CTA captures user's name, email and takes user to telegram bot\
+// 
+// ---- Buy badass-cookies.com
+//      - Point unicornplatform website to this domain
+//
+//! ### Product Backlog - unprioritized
+// ---- Custom quests
+//      - Column in user_details table that specifies number of quests created
+//      - Column is maintained by a PostgreSQL function
+//      - Columns for each quest in user_details OR a separate quests table 
+//
+// ---- Negative cookie weight - case for negative weights
+//      - if negative weight is added and new weight <= 0, then ask user
+//      - if they want to delete the cookie
+//
+// ---- /add command or plain text add command shows inline keyboard with quests
+//      - button press: `add <custom> cookie` is typed in chat for ease of use
