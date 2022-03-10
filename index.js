@@ -47,40 +47,40 @@ const get_user_id_from_supabase = async(user_id) =>  {
 // Educational note:
 // next(cxt) passes cxt object the next handler so you can modify properties like `state`
 bot.use((ctx, next) =>{
-    console.log(ctx.state);
-    console.log(`Entered use handler - IsUser: ${ctx.state.isUser}`);
-    // check if user already exists
-    if (ctx.state.isUser == 1){
-        //do nothing
-        console.log(`use handler says user exists`)
-    } else {
-            // TODO same code block also in start command, do something
-            // if id is not in table, add it to table
-            const insert_user_id = async() => {
-                const { data, error } = await supabase
-                    .from('user_details')
-                    .insert([
-                        {
-                            user_id_telegram: `${ctx.id}`,
-                            username_telegram: ctx.username,
-                            first_name_telegram: ctx.first_name,
-                            last_name_telegram: ctx.last_name,
-                            type_telegram: ctx.type
-                        }
-                    ])
-                if (error) {
-                    console.error(error)
-                    return
-                }
-                return data
+    // console.log(ctx.state);
+    // console.log(`Entered use handler - IsUser: ${ctx.state.isUser}`);
+    // // check if user already exists
+    // if (ctx.state.isUser == 1){
+    //     //do nothing
+    //     console.log(`use handler says user exists`)
+    // } else {
+    //         // TODO same code block also in start command, do something
+    //         // if id is not in table, add it to table
+    //         const insert_user_id = async() => {
+    //             const { data, error } = await supabase
+    //                 .from('user_details')
+    //                 .insert([
+    //                     {
+    //                         user_id_telegram: ctx.from.id,
+    //                         username_telegram: ctx.from.username,
+    //                         first_name_telegram: ctx.from.first_name,
+    //                         last_name_telegram: ctx.from.last_name,
+    //                         type_telegram: ctx.from.type
+    //                     }
+    //                 ])
+    //             if (error) {
+    //                 console.error(error)
+    //                 return
+    //             }
+    //             return data
 
-            }        
-            // set ctx state
-            insert_user_id().then(res => {
-                ctx.state.isUser == 1;
-                console.log(`USE HANDLER: user entry added: ${res}`)
-            });
-    }
+    //         }        
+    //         // set ctx state
+    //         insert_user_id().then(() => {
+    //             ctx.state.isUser == 1;
+    //             console.log(`USE HANDLER: user entry added`)
+    //         });
+    // }
     next(ctx);
 });
 
@@ -95,6 +95,7 @@ const arrCookiePleasePhrases = [`cookie please`, `cookie`, `cookie plz`,`cookie 
 bot.hears(arrCookiePleasePhrases, (ctx, next) => {
     // creating a wrapping function so we have an async context
     const get_cookie = async() =>  {
+    // get cookie by 
         const {data: cookies , error} = await supabase
             .from('cookies')
             .select('text')
@@ -107,10 +108,10 @@ bot.hears(arrCookiePleasePhrases, (ctx, next) => {
         return cookies
     }
         get_cookie().then(cookies => {
-        const cookie_string = cookies[0]['text'];
-        // Educational note:
-        // Use then to perform actions, you can chain then if needed
-        ctx.reply(`Cookie:
+            const cookie_string = cookies[0]['text'];
+            // Educational note:
+            // Use then to perform actions, you can chain then if needed
+            ctx.reply(`Cookie:
 ${cookie_string}`);
         return cookie_string;
     });
@@ -137,35 +138,36 @@ bot.hears(arrAddCookieRegEx, (ctx, next) => {
             stringMatches.push(stringMessage.replace(value,""));
         }
     })
+    // console.log(ctx)
     // insert cookie to cookies table in Supabase
     const insert_cookie = async() => {
+  
         const { data, error } = await supabase
-            .from('cookies')
-            .insert([
-                {
-                text: stringMatches[0],
-                // TODO make weight and type customizable based on cookie type
-                // weight: ctx.username,
-                user_id_telegram: ctx.id
-                // type_mini: ;
-                // type_custom_1: ;
-                // type_custom_2: ;
-                // type_custom_3: 
-                }
-            ])
-        if (error) {
-            console.error(`Error while inserting cookie: ${error[0]}`);
+        .from('cookies')
+        .insert([
+            {
+            text: stringMatches[0],
+            // TODO make weight and type customizable based on cookie type
+            // weight: ,
+            user_id_telegram: ctx.from.id
+            // type_mini: ;
+            // type_custom_1: ;
+            // type_custom_2: ;
+            // type_custom_3: 
+            }
+        ])
+         if(error){
+            console.log(`Error while inserting cookie: ${error}`);
+            console.log(error);
             return;
         }
         return data;
     }
-    insert_cookie().then(data => {
-    // send reply
-    // Note: Want to send  stringMatches data in ctx.reply
-    // hence it was called within async
-    console.log(data); 
-    // TODO differentiate between cookie types
-    ctx.reply(`Cookie added! Great job :)
+    Promise.all([insert_cookie()]).finally((returnedData) => {
+        // send reply
+        // Note: Want to send  stringMatches data in ctx.reply
+        // hence it was called within async
+        ctx.reply(`Cookie added! Great job :)
 
 Cookie:
 ${stringMatches[0]}`);
@@ -237,23 +239,23 @@ bot.settings((ctx, next) =>{
 // Custom command
 //! Currently unused
 //TODO Make useful or remove 
-bot.command("add", (ctx) => {
-    ctx.telegram.sendMessage(ctx.chat.id, `What kind of cookie?`,{
-        reply_markup: {
-            // array of array of Keyboard Button - https://core.telegram.org/bots/api#keyboardbutton
-            keyboard: [
-                [
-                    // TODO Currently replies with this text
-                    // TODO could use switch_inline_query_inline_chat
-                    // https://core.telegram.org/bots/api#inlinekeyboardbutton
-                    {text: "add mini cookie"},
-                    {text: "add cookie"}]
-            ],
-            resize_keyboard: true,
-            one_time_keyboard: true
-        }
-    })
-})
+// bot.command("add", (ctx) => {
+//     ctx.telegram.sendMessage(ctx.chat.id, `What kind of cookie?`,{
+//         reply_markup: {
+//             // array of array of Keyboard Button - https://core.telegram.org/bots/api#keyboardbutton
+//             keyboard: [
+//                 [
+//                     // TODO Currently replies with this text
+//                     // TODO could use switch_inline_query_inline_chat
+//                     // https://core.telegram.org/bots/api#inlinekeyboardbutton
+//                     {text: "add mini cookie"},
+//                     {text: "add cookie"}]
+//             ],
+//             resize_keyboard: true,
+//             one_time_keyboard: true
+//         }
+//     })
+// })
 
 
 // ### LAUNCH BOT ###
