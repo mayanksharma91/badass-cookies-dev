@@ -231,9 +231,8 @@ ${stringMatches[0]}`);
 // Create a handler for the /start command
 bot.start((ctx, next) => {
     console.log(`START HANDLER ENTERED`);
-    // TODO Check if username is in database
     get_user_id_from_supabase(ctx.from.id).then(user_id_telegram =>{
-        // if the id exists in the supabase table
+        // TODO if username in database, then set some kind of state variable
         if(user_id_telegram == ctx.from.id){
             // do nothing
         } else {
