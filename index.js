@@ -262,6 +262,8 @@ bot.settings((ctx, next) =>{
 console.log(`##### BOT STARTED #####`)
 bot.launch()
 
+// checking git
+
 //! ### To do list for MVP - prioritized
 // ---- Randomization of cookie please
 // PostgreSQL function that returns setof all cookie_id and weights for a user
