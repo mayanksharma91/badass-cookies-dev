@@ -137,7 +137,7 @@ ${cookie_string}`);
     });
     next(ctx);
 }) 
-
+// many bugs to fix
 // // WORKING VERSION
 // bot.hears(arrCookiePleasePhrases, (ctx, next) => {
 //     // creating a wrapping function so we have an async context
