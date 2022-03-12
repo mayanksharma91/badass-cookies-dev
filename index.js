@@ -109,21 +109,23 @@ bot.hears(arrCookiePleasePhrases, (ctx, next) => {
         return cookies
     }
         get_cookie().then((cookies) => {
-            // console.log(cookies)
-            // loop over each cookie's weight
+            //! Handle error where there is only one cookie:
+            //! cookies may not be returned as an array of objects anymore
             let cookie_string = 'No cookies added!'
-            // array with cookie_id
-            let arrForSamplingID =[];
+            // array with cookie_id, will add more cookies to 
+            // increase sampling probability of cookies with higher weights
+            let arrForSamplingCookieID =[];
+            // array to track the index of samplied cookie_id within cookies array
             let arrForCookiesIndex =[];
             cookies.forEach((cookie,i) => {
                 for (let j = 0, len = cookie.weight; j < len; j++) {
                     // adding an entry for each weight = 1
-                    arrForSamplingID.push(cookie.id);
+                    arrForSamplingCookieID.push(cookie.id);
                     // i is the index in the cookies array 
                     arrForCookiesIndex.push(i);
                 }
             })
-            indexOfSamplingArray = getRandInteger(0, arrForSamplingID.length-1)
+            indexOfSamplingArray = getRandInteger(0, arrForSamplingCookieID.length-1)
             console.log(`sampling index: ${indexOfSamplingArray}`);
             cookieIDToShow = arrForCookiesIndex[indexOfSamplingArray];
             console.log(`cookie ID: ${cookieIDToShow}`);
@@ -137,7 +139,7 @@ ${cookie_string}`);
     });
     next(ctx);
 }) 
-// many bugs to fix
+
 // // WORKING VERSION
 // bot.hears(arrCookiePleasePhrases, (ctx, next) => {
 //     // creating a wrapping function so we have an async context
@@ -230,10 +232,10 @@ ${stringMatches[0]}`);
 bot.start((ctx, next) => {
     console.log(`START HANDLER ENTERED`);
     // TODO Check if username is in database
-    get_user_id_from_supabase(ctx.id).then(user_id_telegram =>{
+    get_user_id_from_supabase(ctx.from.id).then(user_id_telegram =>{
         // if the id exists in the supabase table
-        if(user_id_telegram == ctx.id){
-            ctx.state.isUser = 1;
+        if(user_id_telegram == ctx.from.id){
+            // do nothing
         } else {
             // if id is not in table, add it to table
             const inser_user_id = async() => {
@@ -241,11 +243,11 @@ bot.start((ctx, next) => {
                     .from('user_details')
                     .insert([
                         {
-                            user_id_telegram: ctx.id,
-                            username_telegram: ctx.username,
-                            first_name_telegram: ctx.first_name,
-                            last_name_telegram: ctx.last_name,
-                            type_telegram: ctx.type
+                            user_id_telegram: ctx.from.id,
+                            username_telegram: ctx.from.username,
+                            first_name_telegram: ctx.from.first_name,
+                            last_name_telegram: ctx.from.last_name,
+                            type_telegram: ctx.from.type
                         }
                     ])
             }
