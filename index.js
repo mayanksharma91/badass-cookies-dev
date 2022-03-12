@@ -92,14 +92,15 @@ bot.use((ctx, next) =>{
 const arrCookiePleasePhrases = [`cookie please`, `cookie`, `cookie plz`,`cookie pls`,
 `Cookie please`, `Cookie`,`Cookie plz`, `Cookie pls`]
 
+// 
 bot.hears(arrCookiePleasePhrases, (ctx, next) => {
     // creating a wrapping function so we have an async context
     const get_cookie = async() =>  {
     // get cookie by 
-        const {data: cookies , error} = await supabase
+        const {data: cookies , error, count} = await supabase
             .from('cookies')
-            .select('text')
-            .eq('id','1');
+            .select(`id,text,weight,user_id_telegram`)
+            .eq('user_id_telegram',ctx.from.id);
         
         if (error) {
             console.error(error)
@@ -107,8 +108,27 @@ bot.hears(arrCookiePleasePhrases, (ctx, next) => {
         }
         return cookies
     }
-        get_cookie().then(cookies => {
-            const cookie_string = cookies[0]['text'];
+        get_cookie().then((cookies) => {
+            // console.log(cookies)
+            // loop over each cookie's weight
+            let cookie_string = 'No cookies added!'
+            // array with cookie_id
+            let arrForSamplingID =[];
+            let arrForCookiesIndex =[];
+            cookies.forEach((cookie,i) => {
+                for (let j = 0, len = cookie.weight; j < len; j++) {
+                    // adding an entry for each weight = 1
+                    arrForSamplingID.push(cookie.id);
+                    // i is the index in the cookies array 
+                    arrForCookiesIndex.push(i);
+                }
+            })
+            indexOfSamplingArray = getRandInteger(0, arrForSamplingID.length-1)
+            console.log(`sampling index: ${indexOfSamplingArray}`);
+            cookieIDToShow = arrForCookiesIndex[indexOfSamplingArray];
+            console.log(`cookie ID: ${cookieIDToShow}`);
+            // set cookie_string
+            cookie_string = cookies[cookieIDToShow]['text'];
             // Educational note:
             // Use then to perform actions, you can chain then if needed
             ctx.reply(`Cookie:
@@ -117,6 +137,33 @@ ${cookie_string}`);
     });
     next(ctx);
 }) 
+
+// // WORKING VERSION
+// bot.hears(arrCookiePleasePhrases, (ctx, next) => {
+//     // creating a wrapping function so we have an async context
+//     const get_cookie = async() =>  {
+//     // get cookie by 
+//         const {data: cookies , error} = await supabase
+//             .from('cookies')
+//             .select('text')
+//             .eq('id','1');
+        
+//         if (error) {
+//             console.error(error)
+//             return
+//         }
+//         return cookies
+//     }
+//         get_cookie().then(cookies => {
+//             const cookie_string = cookies[0]['text'];
+//             // Educational note:
+//             // Use then to perform actions, you can chain then if needed
+//             ctx.reply(`Cookie:
+// ${cookie_string}`);
+//         return cookie_string;
+//     });
+//     next(ctx);
+// }) 
 
 //!### Add cookie
 // Edu Note: Remember you can use string methods or RegEx methods to do this. Currently using string replace
@@ -257,6 +304,12 @@ bot.settings((ctx, next) =>{
 //     })
 // })
 
+
+// Random number function
+function getRandInteger(min, max) {
+    // Returns random integer between min and max, both inclusive
+    return Math.floor(Math.random() * (max - min + 1) ) + min;
+  }
 
 // ### LAUNCH BOT ###
 console.log(`##### BOT STARTED #####`)
