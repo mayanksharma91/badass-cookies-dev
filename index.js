@@ -264,7 +264,7 @@ bot.launch()
 // checking git
 
 //! ### To do list for MVP - prioritized
-// ---- Randomization of cookie please
+//* --- Randomization of cookie please - DONE
 // PostgreSQL function that returns setof all cookie_id and weights for a user
 //      - quest_name is optional, takes default value of all
 // For each cookie in array, ensure number of entries of that cookie == weight 
@@ -295,5 +295,5 @@ bot.launch()
 //      - if negative weight is added and new weight <= 0, then ask user
 //      - if they want to delete the cookie
 //
-// ---- /add command or plain text add command shows inline keyboard with quests
+// ---- /add command or plain text add cookie command shows inline keyboard with quests
 //      - button press: `add <custom> cookie` is typed in chat for ease of use
