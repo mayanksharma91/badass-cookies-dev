@@ -22,7 +22,7 @@ const {Telegraf} = require('telegraf');
 const bot = new Telegraf(process.env.BOT_API_KEY);
 
 // reading functions and constants from custom.js
-const custom = require("./custom");
+const custom = require("./custom_lib");
 // console.log(custom);
 
 // ###               ###
@@ -77,7 +77,7 @@ bot.use((ctx, next) =>{
 // Normal text commands handled with `hears`
 // NOTE: to user hear in a group chat, disable bot from bot father
 
-//? ### Cookie please
+//* ### Cookie please command
 const arrCookiePleasePhrases = [`cookie please`, `cookie`, `cookie plz`,`cookie pls`,
 `Cookie please`, `Cookie`,`Cookie plz`, `Cookie pls`]
 
@@ -104,30 +104,29 @@ bot.hears(arrCookiePleasePhrases, (ctx, next) => {
 }) 
 
 
-//? ### Add cookie
+//* ### Add cookie command
 // Edu Note: Remember you can use string methods or RegEx methods to do this. Currently using string replace
 // Edu Note: In RegEx, i means case insensitive and / something / is a regex literal in ES6
-// Array of regular expressions for the handler
-let arrAddCookieRegEx = [/^add cookie \b/i, /^add mini cookie \b/i];
-arrAddCookieRegEx.push(/^add mega cookie \b/i)
 
+// Array of regular expressions for the handler
+let arrAddCookieRegEx = [/^add cookie \b/i, /^add mini cookie \b/i, /^add mega cookie \b/i];
 // Iterate over each regex to find which trigger worked
 bot.hears(arrAddCookieRegEx, (ctx, next) => {
     // to store the extracted matches
     let stringMatches = [];
+    // store message sent by user
+    const stringMessage = ctx.message.text;
     // TODO use i to track which expression gave us the match
     // TODO differentiate between cookie types
-    arrAddCookieRegEx.forEach((value,i) => {
-        const stringMessage= ctx.message.text;
-        if (stringMatches.length == 0 && value.test(stringMessage))  {
-            // we have a match and have not found a cookie before
-            stringMatches.push(stringMessage.replace(value,""));
+    arrAddCookieRegEx.forEach((regEx,i) => {
+        if (stringMatches.length == 0 && regEx.test(stringMessage))  {
+            // we have a match and since the array's length is 0, we have not added a cookie yet
+            stringMatches.push(stringMessage.replace(regEx,""));
         }
     })
     // console.log(ctx)
     // insert cookie to cookies table in Supabase
     const insert_cookie = async() => {
-  
         const { data, error } = await supabase
         .from('cookies')
         .insert([
@@ -149,6 +148,7 @@ bot.hears(arrAddCookieRegEx, (ctx, next) => {
         }
         return data;
     }
+    //TODO Find a better expression than one disaster below! maybe just insert_cookie()
     Promise.all([insert_cookie()]).finally((returnedData) => {
         // send reply
         // Note: Want to send stringMatches data in ctx.reply
@@ -162,8 +162,54 @@ ${stringMatches[0]}`);
     });
 });
 
-//? ### Change cookie weight
+/*
+*   ### Update cookie weight command
+- create regEx for handling +# and -# where # is any integer
+- curtail correct weight additions to +1 - regExs for other numbers are just for functionality
+- handle case where new weight is <= 0
+- update new weight in cookies table in the database
+*/
+// Array of regular expressions for the handler generated here: https://regexr.com/
+// bot.hears does not accept an array of objects. This is just for documentation
+// All cases allow for whitespaces and end of string
+//TODO allow for whitespace in the beginning by adding \s* after
+// let arrUpdateWeightRegExObjects = [
+//     {regEx: /^\+[1-9]+\d*\s*/,          does: 'positive'},
+//     {regEx: /^\-[1-9]+\d*\s*/,          does: 'negative'},
+//     {regEx: /^\+0+\s*|^\-0+\s*|\+\s*$|^\-\s*$/,  does: 'zero'}
+// ]
+let arrUpdateWeightRegEx = [/^\+[1-9]+\d*\s*/, /^\-[1-9]+\d*\s*/, /^\+0+\s*|^\-0+\s*|^\+\s*$|^\-\s*$/];
 
+bot.hears(arrUpdateWeightRegEx, (ctx, next) => {
+    // remove all whitespace acorss the string
+    const stringMessage = ctx.message.text.replace(/\s/g, "");
+    let change = 0;    
+    // Iterate over each regex to find which trigger worked
+    arrUpdateWeightRegEx.forEach((regEx,i) => {
+        // handle zero case
+        if (regEx.test(stringMessage) && i === 2){
+            // return silly message
+            ctx.reply(`LOL bro! What you smoking?`)
+        } // handle positive and negative case
+        else{
+            change = stringMessage.match(regEx);
+            //handle positive case
+            if (regEx.test(stringMessage) && i === 0){
+                // reply with message saying weight increased
+                ctx.reply(`positive weight change`)
+            }
+            // handle negative case
+            else if (regEx.test(stringMessage) && i === 1){
+                // check updated weight 
+                    // if >0 - store updated weight
+                    ctx.reply(`negative weight change`)
+                    // if <=0 - return error
+            }
+        }
+
+    })
+    next(ctx);
+});
 
 /*
 ?   ### SLASH COMMANDS ###
@@ -270,6 +316,19 @@ bot.launch()
 ---- Edit cookie weight
 - PostgreSQL function to increment weight of latest added cookie for user
 
+---- Encapsulate the whole script within bot.use()
+- Start with const validMessage = 0
+- Each function sets validMessage = 1
+- At the end if validMessage === 0 then reply with ${helpMessage} with added line on top
+
+---- Copy edit all messages, especially /start and /help
+
+--- create a user_action_log table in supabase:
+each row will have:
+user.id, telegram_user_id,
+time of their message, their message,
+bot reply, time of bot reply
+
 ---- Deploy on Herkou
 - see youtube video 
 - remember to use dotenv (must) and pm2 (optional) 
@@ -292,8 +351,5 @@ If negative weight is added and new weight <= 0, then ask user if they want to d
 - button press: `add <custom> cookie` is typed in chat for ease of use
 ---- Change weight to frequency - currently confusing
 Ideally higher weight cookies, i.e. more important should be shown less to retain potency
- 
---- create a user_action_log table in supabase:
-it will have the user.id, telegram_user_id, time of their message, their message, bot reply stored in a row
 
 */
