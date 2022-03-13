@@ -85,7 +85,7 @@ const arrCookiePleasePhrases = [`cookie please`, `cookie`, `cookie plz`,`cookie 
 bot.hears(arrCookiePleasePhrases, (ctx, next) => {
     // creating a wrapping function so we have an async context
     const getCookies = async() =>  {
-    // get cookie by 
+    // get cookie by user_id_telegram
         const {data: cookies , error, count} = await supabase
             .from('cookies')
             .select(`id,text,weight,user_id_telegram`)
@@ -179,35 +179,66 @@ ${stringMatches[0]}`);
 //     {regEx: /^\+0+\s*|^\-0+\s*|\+\s*$|^\-\s*$/,  does: 'zero'}
 // ]
 let arrUpdateWeightRegEx = [/^\+[1-9]+\d*\s*/, /^\-[1-9]+\d*\s*/, /^\+0+\s*|^\-0+\s*|^\+\s*$|^\-\s*$/];
+bot.hears(arrUpdateWeightRegEx,(ctx, next) => {
 
-bot.hears(arrUpdateWeightRegEx, (ctx, next) => {
-    // remove all whitespace acorss the string
-    const stringMessage = ctx.message.text.replace(/\s/g, "");
-    let change = 0;    
-    // Iterate over each regex to find which trigger worked
-    arrUpdateWeightRegEx.forEach((regEx,i) => {
-        // handle zero case
-        if (regEx.test(stringMessage) && i === 2){
-            // return silly message
-            ctx.reply(`LOL bro! What you smoking?`)
-        } // handle positive and negative case
-        else{
-            change = stringMessage.match(regEx);
-            //handle positive case
-            if (regEx.test(stringMessage) && i === 0){
-                // reply with message saying weight increased
-                ctx.reply(`positive weight change`)
+    // creating a wrapping function so we have an async context
+    const getLastCookie = async () =>  {
+        // get cookie by user_id_telegram
+            const {data: lastCookie , error, count} = await supabase
+                .from('user_details')
+                .select(`
+                last_served_cookie_id,
+                cookies!user_details_last_served_cookie_id_fkey (
+                  weight
+                )
+              `)
+                .eq('user_id_telegram',ctx.from.id);
+            
+            if (error) {
+                console.error(error)
+                return
             }
-            // handle negative case
-            else if (regEx.test(stringMessage) && i === 1){
-                // check updated weight 
-                    // if >0 - store updated weight
-                    ctx.reply(`negative weight change`)
-                    // if <=0 - return error
-            }
+            return lastCookie
         }
-
-    })
+    
+    getLastCookie().then((lastCookie) => {
+        // lastCookie returns: [ { last_served_cookie_id: 36, cookies: { weight: 1 } } ]
+        const weightLastServedCookie_test = lastCookie[0]['cookies']['weight'];
+        return weightLastServedCookie_test;        
+    }).then((weightLastServedCookie) => {
+        console.log(weightLastServedCookie)
+        // remove all whitespace acorss the string
+        const stringMessage = ctx.message.text.replace(/\s/g, "");
+        let change = 0;
+        let updatedWeight = Number(weightLastServedCookie);
+        console.log(`updated weight initialized to ${updatedWeight}`)
+        
+        // Iterate over each regex to find which trigger worked
+        arrUpdateWeightRegEx.forEach((regEx,i) => {
+            // handle absurd zero case
+            if (regEx.test(stringMessage) && i === 2){
+                // return silly message
+                ctx.reply(`That's a badass message but you can't really do that.`)
+            } // handle valid cases
+            else {
+                change = Number(stringMessage.match(regEx));
+                updatedWeight = Number(weightLastServedCookie) + Number(change);
+                // weight can never be negative or zero
+                if (updatedWeight <= 0){
+                    ctx.reply(`Cookie weighs ${weightLastServedCookie} and can't weigh ${updatedWeight}.
+The ability to delete cookies will be added in the future.`);
+                } //handle positive case
+                else if (regEx.test(stringMessage) && i === 0){
+                    // reply with message saying weight increased
+                    ctx.reply(`Weight increased from ${weightLastServedCookie} to ${updatedWeight}`)
+                } // handle valid negative case
+                else if (regEx.test(stringMessage) && i === 1 && updatedWeight > 0){
+                            ctx.reply(`Weight reduced from ${weightLastServedCookie} to ${updatedWeight}`)
+                }
+            }
+        }); // foreach ends
+        //TODO add the updated weight to databse if updatedWeight > 0 
+    }); // then ends
     next(ctx);
 });
 
