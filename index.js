@@ -24,28 +24,13 @@ const bot = new Telegraf(process.env.BOT_API_KEY);
 // reading functions created by me and stored in custom_functions.js
 // to call them I'll say custom_functions.NAMEOFFUNCTION
 const custom_functions = require("./custom_functions");
-console.log(custom_functions);
+// console.log(custom_functions);
 
 // ###               ###
 //!###  CODE  BEGINS ###
 // ###               ###
 
 // ### IDENTIFY USER ###
-
-// Creating function for getting user_id_telegram from supabase
-// Use as boolean
-const get_user_id_from_supabase = async(user_id) =>  {
-    const {data: user_id_supabase , error} = await supabase
-        .from('user_details')
-        .select('user_id_telegram')
-        .eq('id',user_id);
-    
-    if (error) {
-        console.error(error)
-        return
-    }
-    return user_id_supabase
-}
 
 
 // Log user state within the state property of the ctx object
@@ -100,7 +85,7 @@ const arrCookiePleasePhrases = [`cookie please`, `cookie`, `cookie plz`,`cookie 
 // 
 bot.hears(arrCookiePleasePhrases, (ctx, next) => {
     // creating a wrapping function so we have an async context
-    const get_cookie = async() =>  {
+    const getCookies = async() =>  {
     // get cookie by 
         const {data: cookies , error, count} = await supabase
             .from('cookies')
@@ -115,7 +100,7 @@ bot.hears(arrCookiePleasePhrases, (ctx, next) => {
     }
 
     // get a random cookie from the array of cookie objects
-    get_cookie().then((cookies) => {custom_functions.getRandomCookie(cookies, ctx)});
+    getCookies().then((cookies) => {custom_functions.getRandomCookie(cookies, ctx, supabase)});
     next(ctx);
 }) 
 
@@ -181,16 +166,35 @@ ${stringMatches[0]}`);
 
 // ### CORE COMMANDS ###
 
+// helper function for bot.start
+const getUserIDExistsFromSupabase = async(user_id, supabase) =>  {
+    // returns count of user_id__telegram from supabase which serves as boolean for user exists
+        const { data, error, count } = await supabase
+            .from('user_details')
+            .select('user_id_telegram', { count: 'exact', head: true })
+            .eq('user_id_telegram',user_id);
+        
+        if (error) {
+            console.error(error)
+            return
+        } else{
+            console.log(count)
+            console.log(user_id)
+            return count
+        }
+    }
+
 // Create a handler for the /start command
 bot.start((ctx, next) => {
-    console.log(`START HANDLER ENTERED`);
-    get_user_id_from_supabase(ctx.from.id).then(user_id_telegram =>{
+        getUserIDExistsFromSupabase(ctx.from.id, supabase).then(count =>{
         // TODO if username in database, then set some kind of state variable
-        if(user_id_telegram == ctx.from.id){
-            // do nothing
+        // if(user_id_telegram == ctx.from.id){
+            if(count !== 0){
+        // do nothing
         } else {
             // if id is not in table, add it to table
-            const inser_user_id = async() => {
+            console.log(`count: ${count}`);
+            const insert_user_id = async() => {
                 const { data, error } = await supabase
                     .from('user_details')
                     .insert([
@@ -203,19 +207,11 @@ bot.start((ctx, next) => {
                         }
                     ])
             }
+            insert_user_id();
         }
     })
 
-    ctx.reply(`
-Welcome to your Badass Cookie Jar!
-Your wins are cookies.
-
-When you're feeling down, do the following:
-Read a cookie.
-Feel amazing.
-Resume badassery!`,{
-        parse_mode: 'Markdown'
-    });
+    ctx.reply(`${custom_functions.startMessage}`,{parse_mode: 'Markdown'});
     next(ctx);
 })
 
