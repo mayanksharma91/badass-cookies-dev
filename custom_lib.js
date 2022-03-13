@@ -8,6 +8,11 @@ Read a cookie.
 Feel amazing.
 Resume badassery!`;
 
+const helpMessage = `Your wins, big and small, are cookies.
+Add them by typing **add cookie**
+    
+When you're feeling down request a cookie by typing **cookie please**`
+
 const cookiePleaseMessageWhenNoCookieAdded = `No cookies added!`;
 
 // ### FUNCTIONS
@@ -72,4 +77,12 @@ function getRandInteger(min, max) {
 
 
 // EXPORTING MODULES
-module.exports = { getRandomCookie, getRandInteger, startMessage, cookiePleaseMessageWhenNoCookieAdded };
+module.exports = {
+    //*functions 
+    getRandomCookie,
+    getRandInteger,
+    //* messages as constants
+    startMessage,
+    helpMessage,
+    cookiePleaseMessageWhenNoCookieAdded
+};

@@ -1,5 +1,5 @@
 // ###                   ###
-//!### SETTING IT ALL UP ###
+//?### SETTING IT ALL UP ###
 // ###                   ###
 // Require dotenv package that will help read API keys from the .env file
 // The browser does not support process.env, hence we need dotenv
@@ -21,13 +21,12 @@ const {Telegraf} = require('telegraf');
 // creating a bot from the telegraf package
 const bot = new Telegraf(process.env.BOT_API_KEY);
 
-// reading functions created by me and stored in custom_functions.js
-// to call them I'll say custom_functions.NAMEOFFUNCTION
-const custom_functions = require("./custom_functions");
-// console.log(custom_functions);
+// reading functions and constants from custom.js
+const custom = require("./custom");
+// console.log(custom);
 
 // ###               ###
-//!###  CODE  BEGINS ###
+//?###  CODE  BEGINS ###
 // ###               ###
 
 // ### IDENTIFY USER ###
@@ -74,11 +73,11 @@ bot.use((ctx, next) =>{
     next(ctx);
 });
 
-// ### TEXT COMMANDS ###
+//? ### TEXT COMMANDS ###
 // Normal text commands handled with `hears`
 // NOTE: to user hear in a group chat, disable bot from bot father
 
-//! ### Cookie please
+//? ### Cookie please
 const arrCookiePleasePhrases = [`cookie please`, `cookie`, `cookie plz`,`cookie pls`,
 `Cookie please`, `Cookie`,`Cookie plz`, `Cookie pls`]
 
@@ -100,12 +99,12 @@ bot.hears(arrCookiePleasePhrases, (ctx, next) => {
     }
 
     // get a random cookie from the array of cookie objects
-    getCookies().then((cookies) => {custom_functions.getRandomCookie(cookies, ctx, supabase)});
+    getCookies().then((cookies) => {custom.getRandomCookie(cookies, ctx, supabase)});
     next(ctx);
 }) 
 
 
-//!### Add cookie
+//? ### Add cookie
 // Edu Note: Remember you can use string methods or RegEx methods to do this. Currently using string replace
 // Edu Note: In RegEx, i means case insensitive and / something / is a regex literal in ES6
 // Array of regular expressions for the handler
@@ -152,7 +151,7 @@ bot.hears(arrAddCookieRegEx, (ctx, next) => {
     }
     Promise.all([insert_cookie()]).finally((returnedData) => {
         // send reply
-        // Note: Want to send  stringMatches data in ctx.reply
+        // Note: Want to send stringMatches data in ctx.reply
         // hence it was called within async
         ctx.reply(`Cookie added! Great job :)
 
@@ -163,11 +162,15 @@ ${stringMatches[0]}`);
     });
 });
 
+//? ### Change cookie weight
 
-// ### CORE COMMANDS ###
 
-// helper function for bot.start
-const getUserIDExistsFromSupabase = async(user_id, supabase) =>  {
+/*
+?   ### SLASH COMMANDS ###
+/start, /help, /settings are core commands in telegraf
+*/
+//* helper function for the /start command
+const getUserIDExistsFromSupabase = async(user_id) =>  {
     // returns count of user_id__telegram from supabase which serves as boolean for user exists
         const { data, error, count } = await supabase
             .from('user_details')
@@ -184,9 +187,9 @@ const getUserIDExistsFromSupabase = async(user_id, supabase) =>  {
         }
     }
 
-// Create a handler for the /start command
+//* Handler for the /start command
 bot.start((ctx, next) => {
-        getUserIDExistsFromSupabase(ctx.from.id, supabase).then(count =>{
+        getUserIDExistsFromSupabase(ctx.from.id).then(count =>{
         // TODO if username in database, then set some kind of state variable
         // if(user_id_telegram == ctx.from.id){
             if(count !== 0){
@@ -210,32 +213,30 @@ bot.start((ctx, next) => {
             insert_user_id();
         }
     })
-
-    ctx.reply(`${custom_functions.startMessage}`,{parse_mode: 'Markdown'});
+    ctx.reply(`${custom.startMessage}`,{parse_mode: 'Markdown'});
     next(ctx);
 })
 
-// Create a handler for the /help command
+//* Handler for the /help command
 bot.help((ctx, next) => {
-    ctx.reply(`
-Your wins, big and small, are cookies.
-Add them by typing **add cookie**
-    
-When you're feeling down request a cookie by typing **cookie please**
-`);
+    ctx.reply(`${custom.helpMessage}`,{parse_mode: 'Markdown'});
     next(ctx);
 })
 
-// Create a handler for the /settings command
+//* Handler for the /settings command
+//! Currently a placeholder
+/*  Possible uses:
+add custom quests
+set custom quest names
+*/
 bot.settings((ctx, next) =>{
     ctx.reply(`It's YOUR cookie jar. Set it up how you need it!`);
     next(ctx);
 })
 
 
-// Custom command
+//* Custom command
 //! Currently unused
-//TODO Make useful or remove 
 // bot.command("add", (ctx) => {
 //     ctx.telegram.sendMessage(ctx.chat.id, `What kind of cookie?`,{
 //         reply_markup: {
@@ -263,37 +264,36 @@ bot.launch()
 
 // checking git
 
-//! ### To do list for MVP - prioritized
-//* --- Randomization of cookie please - DONE
-// PostgreSQL function that returns setof all cookie_id and weights for a user
-//      - quest_name is optional, takes default value of all
-// For each cookie in array, ensure number of entries of that cookie == weight 
-//      - eg. if weight is 2, add another row with same cookie_id and weight 1
-// Generate random number between 0 (first cookie_id) to n (last cookie of set)
-//      - this is the cookie_id that is returned to the javascript promise
-//
-// ---- Edit cookie weight
-// PostgreSQL function to increment weight of latest added cookie for user
-// 
-// ---- Deploy on Herkou
-//      - see youtube video 
-//      - remember to use dotenv (must) and pm2 (optional) 
-//
-// ---- Set up unicornplatform website
-//      - CTA captures user's name, email and takes user to telegram bot\
-// 
-// ---- Buy badass-cookies.com
-//      - Point unicornplatform website to this domain
-//
-//! ### Product Backlog - unprioritized
-// ---- Custom quests
-//      - Column in user_details table that specifies number of quests created
-//      - Column is maintained by a PostgreSQL function
-//      - Columns for each quest in user_details OR a separate quests table 
-//
-// ---- Negative cookie weight - case for negative weights
-//      - if negative weight is added and new weight <= 0, then ask user
-//      - if they want to delete the cookie
-//
-// ---- /add command or plain text add cookie command shows inline keyboard with quests
-//      - button press: `add <custom> cookie` is typed in chat for ease of use
+/*
+? ### To do list for MVP - prioritized
+* --- Randomization of cookie please - DONE
+---- Edit cookie weight
+- PostgreSQL function to increment weight of latest added cookie for user
+
+---- Deploy on Herkou
+- see youtube video 
+- remember to use dotenv (must) and pm2 (optional) 
+
+---- Set up unicornplatform website
+- CTA captures user's name, email and takes user to telegram bot\
+
+---- Buy badass-cookies.com
+- Point unicornplatform website to this domain
+
+! ### Product Backlog - unprioritized
+---- Custom quests
+Column in user_details table that specifies number of quests created
+Columns for each quest in user_details OR a separate quests table 
+
+---- Negative cookie weight - case for negative weights
+If negative weight is added and new weight <= 0, then ask user if they want to delete the cookie
+
+---- /add command or plain text add cookie command shows inline keyboard with quests
+- button press: `add <custom> cookie` is typed in chat for ease of use
+---- Change weight to frequency - currently confusing
+Ideally higher weight cookies, i.e. more important should be shown less to retain potency
+ 
+--- create a user_action_log table in supabase:
+it will have the user.id, telegram_user_id, time of their message, their message, bot reply stored in a row
+
+*/
