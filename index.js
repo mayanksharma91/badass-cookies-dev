@@ -21,6 +21,11 @@ const {Telegraf} = require('telegraf');
 // creating a bot from the telegraf package
 const bot = new Telegraf(process.env.BOT_API_KEY);
 
+// reading functions created by me and stored in custom_functions.js
+// to call them I'll say custom_functions.NAMEOFFUNCTION
+const custom_functions = require("./custom_functions");
+console.log(custom_functions);
+
 // ###               ###
 //!###  CODE  BEGINS ###
 // ###               ###
@@ -108,64 +113,12 @@ bot.hears(arrCookiePleasePhrases, (ctx, next) => {
         }
         return cookies
     }
-        get_cookie().then((cookies) => {
-            //! Handle error where there is only one cookie:
-            //! cookies may not be returned as an array of objects anymore
-            let cookie_string = 'No cookies added!'
-            // array with cookie_id, will add more cookies to 
-            // increase sampling probability of cookies with higher weights
-            let arrForSamplingCookieID =[];
-            // array to track the index of samplied cookie_id within cookies array
-            let arrForCookiesIndex =[];
-            cookies.forEach((cookie,i) => {
-                for (let j = 0, len = cookie.weight; j < len; j++) {
-                    // adding an entry for each weight = 1
-                    arrForSamplingCookieID.push(cookie.id);
-                    // i is the index in the cookies array 
-                    arrForCookiesIndex.push(i);
-                }
-            })
-            indexOfSamplingArray = getRandInteger(0, arrForSamplingCookieID.length-1)
-            console.log(`sampling index: ${indexOfSamplingArray}`);
-            cookieIDToShow = arrForCookiesIndex[indexOfSamplingArray];
-            console.log(`cookie ID: ${cookieIDToShow}`);
-            // set cookie_string
-            cookie_string = cookies[cookieIDToShow]['text'];
-            // Educational note:
-            // Use then to perform actions, you can chain then if needed
-            ctx.reply(`Cookie:
-${cookie_string}`);
-        return cookie_string;
-    });
+
+    // get a random cookie from the array of cookie objects
+    get_cookie().then((cookies) => {custom_functions.getRandomCookie(cookies, ctx)});
     next(ctx);
 }) 
 
-// // WORKING VERSION
-// bot.hears(arrCookiePleasePhrases, (ctx, next) => {
-//     // creating a wrapping function so we have an async context
-//     const get_cookie = async() =>  {
-//     // get cookie by 
-//         const {data: cookies , error} = await supabase
-//             .from('cookies')
-//             .select('text')
-//             .eq('id','1');
-        
-//         if (error) {
-//             console.error(error)
-//             return
-//         }
-//         return cookies
-//     }
-//         get_cookie().then(cookies => {
-//             const cookie_string = cookies[0]['text'];
-//             // Educational note:
-//             // Use then to perform actions, you can chain then if needed
-//             ctx.reply(`Cookie:
-// ${cookie_string}`);
-//         return cookie_string;
-//     });
-//     next(ctx);
-// }) 
 
 //!### Add cookie
 // Edu Note: Remember you can use string methods or RegEx methods to do this. Currently using string replace
@@ -306,11 +259,7 @@ bot.settings((ctx, next) =>{
 // })
 
 
-// Random number function
-function getRandInteger(min, max) {
-    // Returns random integer between min and max, both inclusive
-    return Math.floor(Math.random() * (max - min + 1) ) + min;
-  }
+
 
 // ### LAUNCH BOT ###
 console.log(`##### BOT STARTED #####`)
