@@ -1,5 +1,5 @@
 
-// ### TEXT THAT IS SENT TO USER
+//? ### TEXT THAT IS SENT TO USER
 const startMessage = `Welcome to your Badass Cookie Jar!
 Your wins are cookies.
 
@@ -15,7 +15,8 @@ When you're feeling down request a cookie by typing **cookie please**`
 
 const cookiePleaseMessageWhenNoCookieAdded = `No cookies added!`;
 
-// ### FUNCTIONS
+
+//? ### FUNCTIONS
 function getRandomCookie(cookies, ctx, supabase){
     console.log(`length of cookies: ${cookies.length}`)
     // Takes in array of cookie objects and returns a single cookie as string    
@@ -62,7 +63,7 @@ function getRandomCookie(cookies, ctx, supabase){
                 }
                 return junkData
             }
-            writeLastServedCookieID().then((junkData) => {console.log(junkData)});
+            writeLastServedCookieID().then((junkData) => {console.log(`${junkData}`)});
             ctx.reply(`${cookie_string}`);
             return cookie_string;
         }
@@ -76,7 +77,7 @@ function getRandInteger(min, max) {
  
 
 
-// EXPORTING MODULES
+//? EXPORTING MODULES
 module.exports = {
     //*functions 
     getRandomCookie,

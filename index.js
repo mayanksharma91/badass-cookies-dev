@@ -36,7 +36,10 @@ const custom = require("./custom_lib");
 // Educational note:
 // next(cxt) passes cxt object the next handler so you can modify properties like `state`
 bot.use((ctx, next) =>{
+    // ctx.state.quest1 = `coding`;
     // console.log(ctx.state);
+
+    
     // console.log(`Entered use handler - IsUser: ${ctx.state.isUser}`);
     // // check if user already exists
     // if (ctx.state.isUser == 1){
@@ -77,6 +80,18 @@ bot.use((ctx, next) =>{
 // Normal text commands handled with `hears`
 // NOTE: to user hear in a group chat, disable bot from bot father
 
+    // //* ### Trying quests out for cookie please command
+    // const strQuest1 = ctx.state.quest1;
+    // const strForQuest1RegEx = `^\\s*(\\b`+`${strQuest1}`+`\\b)*\\s*`;
+    // const quest1RegEx = new RegExp(strForQuest1RegEx + `\\bcookie\\b\\s*\\bplease\\b\\s*$`);
+    // let arrCookiePleaseRegEx = [];
+    // arrCookiePleaseRegEx.push(quest1RegEx)
+    // console.log(arrCookiePleaseRegEx);
+    // // const arrCookiePleaseRegEx = [/^\s*(\bcoding\b)*\s*\bcookie\b\s*\bplease\b\s*$/i];
+    // bot.hears(arrCookiePleaseRegEx, (ctx,next) => {
+    //     console.log(`Dynamic quests are now possible! Maybe! Hehe!`)
+    // });
+
 //* ### Cookie please command
 const arrCookiePleasePhrases = [`cookie please`, `cookie`, `cookie plz`,`cookie pls`,
 `Cookie please`, `Cookie`,`Cookie plz`, `Cookie pls`]
@@ -100,7 +115,9 @@ bot.hears(arrCookiePleasePhrases, (ctx, next) => {
 
     // get a random cookie from the array of cookie objects
     getCookies().then((cookies) => {custom.getRandomCookie(cookies, ctx, supabase)});
+    ctx.state.isUser = ctx.state.isUser + 1 
     next(ctx);
+    console.log(ctx.state);
 }) 
 
 
@@ -311,26 +328,41 @@ bot.settings((ctx, next) =>{
     next(ctx);
 })
 
+//? https://github.com/telegraf/telegraf/issues/705
+//? https://github.com/telegraf/telegraf/issues/428
+//? https://github.com/telegraf/telegraf/issues/221
+//? for learning how to use a wizard
 
 //* Custom command
 //! Currently unused
-// bot.command("add", (ctx) => {
-//     ctx.telegram.sendMessage(ctx.chat.id, `What kind of cookie?`,{
-//         reply_markup: {
-//             // array of array of Keyboard Button - https://core.telegram.org/bots/api#keyboardbutton
-//             keyboard: [
-//                 [
-//                     // TODO Currently replies with this text
-//                     // TODO could use switch_inline_query_inline_chat
-//                     // https://core.telegram.org/bots/api#inlinekeyboardbutton
-//                     {text: "add mini cookie"},
-//                     {text: "add cookie"}]
-//             ],
-//             resize_keyboard: true,
-//             one_time_keyboard: true
-//         }
-//     })
-// })
+//? For using inline keyboard with callbacks
+//? https://stackoverflow.com/questions/46828965/telegram-bot-inline-keyboard-markup-callback-usage-for-channel-messages
+bot.command(`add`, (ctx) => {
+    const stringAddInLine = `Which type of cookie?
+Don't want to categorize? Simply type your cookie!`
+    ctx.telegram.sendMessage(ctx.chat.id, stringAddInLine,{
+        reply_markup: {
+            // array of array of Keyboard Button - https://core.telegram.org/bots/api#keyboardbutton
+            inline_keyboard: [
+                [
+                    // TODO Currently replies with this text
+                    // TODO could use switch_inline_query_inline_chat
+                    // https://core.telegram.org/bots/api#inlinekeyboardbutton
+                    {text: `add cookie`, callback_data: `add cookie`}
+                ],
+                [
+                    {text: `add custom1 cookie`, callback_data: `add custom1 cookie`},
+                    {text: `add custom2 cookie`, callback_data: `add custom2 cookie`},
+                    {text: `add custom3 cookie`, callback_data: `add custom3 cookie`}
+                ]
+
+            ],
+            resize_keyboard: true,
+            one_time_keyboard: true
+        }
+    })
+    next(ctx);
+})
 
 
 
@@ -338,8 +370,9 @@ bot.settings((ctx, next) =>{
 // ### LAUNCH BOT ###
 console.log(`##### BOT STARTED #####`)
 bot.launch()
-
-// checking git
+// graceful stop
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
 
 /*
 ? ### To do list for MVP - prioritized
