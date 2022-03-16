@@ -201,7 +201,7 @@ bot.hears(arrUpdateWeightRegEx,(ctx, next) => {
     // creating a wrapping function so we have an async context
     const getLastCookie = async () =>  {
         // get cookie by user_id_telegram
-            const {data: lastCookie , error, count} = await supabase
+            const {data: lastServedCookie , error, count} = await supabase
                 .from('user_details')
                 .select(`
                 last_served_cookie_id,
@@ -215,19 +215,40 @@ bot.hears(arrUpdateWeightRegEx,(ctx, next) => {
                 console.error(error)
                 return
             }
-            return lastCookie
+            return lastServedCookie
         }
-    
-    getLastCookie().then((lastCookie) => {
-        // lastCookie returns: [ { last_served_cookie_id: 36, cookies: { weight: 1 } } ]
-        const weightLastServedCookie_test = lastCookie[0]['cookies']['weight'];
-        return weightLastServedCookie_test;        
-    }).then((weightLastServedCookie) => {
-        console.log(weightLastServedCookie)
+        
+        //add the updatedWeight to databse if updatedWeight > 0
+        const updateCookieWeight = async(lastServedCookie, updatedWeight) => {
+            const { data, error } = await supabase
+            .from('cookies')
+            .update([
+                {
+                // text: stringMatches[0],
+                weight: updatedWeight
+                // user_id_telegram: ctx.from.id
+                // type_mini: ;
+                // type_custom_1: ;
+                // type_custom_2: ;
+                // type_custom_3: 
+                }
+            ])
+            .eq(`id`,lastServedCookie[0].last_served_cookie_id)
+                if(error){
+                console.log(`Error while inserting cookie: ${error}`);
+                console.log(error);
+                return;
+            }
+            return data;
+        }
+
+    getLastCookie().then((lastServedCookie) => {
+        console.log(lastServedCookie);
         // remove all whitespace acorss the string
         const stringMessage = ctx.message.text.replace(/\s/g, "");
         let change = 0;
-        let updatedWeight = Number(weightLastServedCookie);
+        const weightLastServedCookie = Number(lastServedCookie[0]['cookies']['weight']);
+        let updatedWeight = Number(lastServedCookie[0]['cookies']['weight']);
         console.log(`updated weight initialized to ${updatedWeight}`)
         
         // Iterate over each regex to find which trigger worked
@@ -247,14 +268,21 @@ The ability to delete cookies will be added in the future.`);
                 } //handle positive case
                 else if (regEx.test(stringMessage) && i === 0){
                     // reply with message saying weight increased
-                    ctx.reply(`Weight increased from ${weightLastServedCookie} to ${updatedWeight}`)
+                    updateCookieWeight(lastServedCookie, updatedWeight).then(() => {
+                        console.log(`Cookie weight increased.`)
+                    });
+                    ctx.reply(`Weight increased from ${weightLastServedCookie} to ${updatedWeight}`);
                 } // handle valid negative case
                 else if (regEx.test(stringMessage) && i === 1 && updatedWeight > 0){
-                            ctx.reply(`Weight reduced from ${weightLastServedCookie} to ${updatedWeight}`)
+                    updateCookieWeight(lastServedCookie, updatedWeight).then(() => {
+                        console.log(`Cookie weight decreased.`)
+                    });
+                    ctx.reply(`Weight reduced from ${weightLastServedCookie} to ${updatedWeight}`);
                 }
             }
         }); // foreach ends
-        //TODO add the updated weight to databse if updatedWeight > 0 
+
+
     }); // then ends
     next(ctx);
 });
