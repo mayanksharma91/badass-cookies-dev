@@ -247,14 +247,43 @@ The ability to delete cookies will be added in the future.`);
                 } //handle positive case
                 else if (regEx.test(stringMessage) && i === 0){
                     // reply with message saying weight increased
-                    ctx.reply(`Weight increased from ${weightLastServedCookie} to ${updatedWeight}`)
+                    updateCookieWeight().then(() => {
+                        console.log(`Cookie weight increased.`)
+                    });
+                    ctx.reply(`Weight increased from ${weightLastServedCookie} to ${updatedWeight}`);
                 } // handle valid negative case
                 else if (regEx.test(stringMessage) && i === 1 && updatedWeight > 0){
-                            ctx.reply(`Weight reduced from ${weightLastServedCookie} to ${updatedWeight}`)
+                    updateCookieWeight().then(() => {
+                        console.log(`Cookie weight decreased.`)
+                    });
+                    ctx.reply(`Weight reduced from ${weightLastServedCookie} to ${updatedWeight}`);
                 }
             }
         }); // foreach ends
-        //TODO add the updated weight to databse if updatedWeight > 0 
+        //add the updatedWeight to databse if updatedWeight > 0
+        const updateCookieWeight = async(lastCookie) => {
+            const { data, error } = await supabase
+            .from('cookies')
+            .update([
+                {
+                // text: stringMatches[0],
+                weight: lastCookie[0]['cookies']['weight'],
+                // user_id_telegram: ctx.from.id
+                // type_mini: ;
+                // type_custom_1: ;
+                // type_custom_2: ;
+                // type_custom_3: 
+                }
+            ])
+            .eq(`id`,lastCookie[0].last_served_cookie_id)
+             if(error){
+                console.log(`Error while inserting cookie: ${error}`);
+                console.log(error);
+                return;
+            }
+            return data;
+        }
+
     }); // then ends
     next(ctx);
 });
