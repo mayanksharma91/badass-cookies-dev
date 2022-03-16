@@ -1,19 +1,34 @@
 
 //? ### TEXT THAT IS SENT TO USER
-const startMessage = `Welcome to your Badass Cookie Jar!
-Your wins are cookies.
+const startMessage = `*Welcome to your Badass Cookie Jar!*
+
+Your wins, big and small, are cookies 🍪
 
 When you're feeling down, do the following:
-Read a cookie.
-Feel amazing.
-Resume badassery!`;
-
-const helpMessage = `Your wins, big and small, are cookies.
-Add them by typing **add cookie**
+    1️⃣ Ask for a cookie 🍪
+    2️⃣ Read cookie and feel amazing 💪
+    3️⃣ Resume badassery! 😎
     
-When you're feeling down request a cookie by typing **cookie please**`
+Type \`/help\` if you're feeling lost`;
 
-const cookiePleaseMessageWhenNoCookieAdded = `No cookies added!`;
+const helpMessage = `Your wins, big and small, are cookies 🍪
+
+*To add a cookie* send:
+\`add cookie <cookie text here>\`
+Eg. add cookie I had never coded in my life. 3 weeks later, I built this bot!
+
+Felling down? *To request a cookie* send:
+\`cookie please\`
+
+Like the 🍪? Send \`+1\` or \`-1\` to modify *how often you see this cookie*.
+
+Add five cookies to get started!`
+
+const cookiePleaseMessageWhenNoCookieAdded = `No cookies added!
+
+*To add a cookie* send:
+\`add cookie <cookie text here>\`
+Eg. add cookie I had never coded in my life. 3 weeks later, I built this bot!`;
 
 
 //? ### FUNCTIONS
@@ -63,7 +78,7 @@ function getRandomCookie(cookies, ctx, supabase){
                 }
                 return junkData
             }
-            writeLastServedCookieID().then((junkData) => {console.log(`${junkData}`)});
+            writeLastServedCookieID().then((junkData) => {console.log(`${cookie_string}`)});
             ctx.reply(`${cookie_string}`);
             return cookie_string;
         }

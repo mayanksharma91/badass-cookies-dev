@@ -29,52 +29,150 @@ const custom = require("./custom_lib");
 //?###  CODE  BEGINS ###
 // ###               ###
 
-// ### IDENTIFY USER ###
 
-
-// Log user state within the state property of the ctx object
+//?## EXPERIMENTAL- BEGIN ###
+// * Alternative to add cookie
 // Educational note:
 // next(cxt) passes cxt object the next handler so you can modify properties like `state`
-bot.use((ctx, next) =>{
-    // ctx.state.quest1 = `coding`;
-    // console.log(ctx.state);
-
-    
-    // console.log(`Entered use handler - IsUser: ${ctx.state.isUser}`);
-    // // check if user already exists
-    // if (ctx.state.isUser == 1){
-    //     //do nothing
-    //     console.log(`use handler says user exists`)
-    // } else {
-    //         // TODO same code block also in start command, do something
-    //         // if id is not in table, add it to table
-    //         const insert_user_id = async() => {
-    //             const { data, error } = await supabase
-    //                 .from('user_details')
-    //                 .insert([
-    //                     {
-    //                         user_id_telegram: ctx.from.id,
-    //                         username_telegram: ctx.from.username,
-    //                         first_name_telegram: ctx.from.first_name,
-    //                         last_name_telegram: ctx.from.last_name,
-    //                         type_telegram: ctx.from.type
-    //                     }
-    //                 ])
-    //             if (error) {
-    //                 console.error(error)
-    //                 return
+bot.command(`Menu`,(ctx, next) =>{
+    // const insert_user_id = async() => {
+    //     const { data, error } = await supabase
+    //         .from('user_details')
+    //         .insert([
+    //             {
+    //                 user_id_telegram: ctx.from.id,
+    //                 username_telegram: ctx.from.username,
+    //                 first_name_telegram: ctx.from.first_name,
+    //                 last_name_telegram: ctx.from.last_name,
+    //                 type_telegram: ctx.from.type
     //             }
-    //             return data
+    //         ])
+    //     if (error) {
+    //         console.error(error)
+    //         return
+    //     }
+    //     return data
 
-    //         }        
-    //         // set ctx state
-    //         insert_user_id().then(() => {
-    //             ctx.state.isUser == 1;
-    //             console.log(`USE HANDLER: user entry added`)
-    //         });
-    // }
+    // }        
+
+    // insert_user_id().then(() => {
+    //     console.log(`USE HANDLER: user entry added`)
+    // });
+    
+    //* Creating interactive menu
+    bot.telegram.sendMessage(ctx.chat.id, `Main Menu`,
+    {
+        reply_markup: {
+            inline_keyboard: [
+                [
+                    { text: `Cookie please`, callback_data: `cookie please`}
+                ],
+                [
+                    { text: `Add cookie`, callback_data: `add cookie`}
+                ]
+            ]
+        }
+    });
     next(ctx);
 });
+
+//* Helper functions for alternative to cookie please
+//* Types of cookies menu
+//? pass data into callback action
+//? https://stackoverflow.com/questions/63991174/telegraf-js-pass-data-from-button-to-a-function-that-handle-a-wizardscene
+bot.action(`add cookie`, (ctx, next) =>{
+    // deletes last message we sent
+    ctx.deleteMessage();
+    
+    //TODO add code to set addCookie flag in database = 1
+    
+    // types of cookies
+    bot.telegram.sendMessage(ctx.chat.id, `Which kind of cookie are you adding?`,
+    {
+        reply_markup: {
+            inline_keyboard: [
+                [
+                    { text: `Just any cookie`, callback_data: `add cookie`}
+                ],
+                [
+                    { text: `Custom 1 cookie`, callback_data: `add custom 1 cookie`},
+                    { text: `Custom 2 cookie`, callback_data: `add custom 2 cookie`},
+                    { text: `Custom 3 cookie`, callback_data: `add custom 3 cookie`}
+                ],
+                [
+                    { text: `Back to menu`, callback_data: `Main Menu`}
+                ]
+            ]
+        }
+    });
+
+    next(ctx);
+})
+
+//* Types of cookies menu
+bot.action(`Main Menu`, (ctx, next) =>{
+    // deletes last message we sent
+    ctx.deleteMessage();
+    
+    //TODO add code to set addCookie flag in database = 0
+    
+    // copy of main menu
+    bot.telegram.sendMessage(ctx.chat.id, `Waht do you want to do?`,
+    {
+        reply_markup: {
+            inline_keyboard: [
+                [
+                    { text: `Cookie please`, callback_data: `cookie please`}
+                ],
+                [
+                    { text: `Add cookie`, callback_data: `add cookie`}
+                ]
+            ]
+        }
+    });
+    next(ctx);
+})
+
+//* Types of cookies menu
+bot.action(`Cookie please`, (ctx, next) =>{
+    // deletes last message we sent
+    // ctx.deleteMessage();
+    // copy of main menu
+    // bot.telegram.sendMessage(ctx.chat.id, `Main Menu`,
+    // {
+    //     reply_markup: {
+    //         inline_keyboard: [
+    //             [
+    //                 { text: `Cookie please`, callback_data: `cookie please`}
+    //             ],
+    //             [
+    //                 { text: `Add cookie`, callback_data: `add cookie`}
+    //             ]
+    //         ]
+    //     }
+    // });
+    ctx.deleteMessage();
+    // creating a wrapping function so we have an async context
+    const getCookies = async() =>  {
+    // get cookie by user_id_telegram
+        const {data: cookies , error, count} = await supabase
+            .from('cookies')
+            .select(`id,text,weight,user_id_telegram`)
+            .eq('user_id_telegram',ctx.from.id);
+        
+        if (error) {
+            console.error(error)
+            return
+        }
+        return cookies
+    }
+
+    // get a random cookie from the array of cookie objects
+    getCookies().then((cookies) => {custom.getRandomCookie(cookies, ctx, supabase)});
+    next(ctx);
+})
+//?## EXPERIMENTAL- END ###
+
 
 //? ### TEXT COMMANDS ###
 // Normal text commands handled with `hears`
@@ -98,6 +196,7 @@ const arrCookiePleasePhrases = [`cookie please`, `cookie`, `cookie plz`,`cookie 
 
 // 
 bot.hears(arrCookiePleasePhrases, (ctx, next) => {
+    ctx.deleteMessage();
     // creating a wrapping function so we have an async context
     const getCookies = async() =>  {
     // get cookie by user_id_telegram
@@ -115,9 +214,7 @@ bot.hears(arrCookiePleasePhrases, (ctx, next) => {
 
     // get a random cookie from the array of cookie objects
     getCookies().then((cookies) => {custom.getRandomCookie(cookies, ctx, supabase)});
-    ctx.state.isUser = ctx.state.isUser + 1 
     next(ctx);
-    console.log(ctx.state);
 }) 
 
 
@@ -281,8 +378,6 @@ The ability to delete cookies will be added in the future.`);
                 }
             }
         }); // foreach ends
-
-
     }); // then ends
     next(ctx);
 });
@@ -308,6 +403,7 @@ const getUserIDExistsFromSupabase = async(user_id) =>  {
             return count
         }
     }
+
 
 //* Handler for the /start command
 bot.start((ctx, next) => {
@@ -336,8 +432,31 @@ bot.start((ctx, next) => {
         }
     })
     ctx.reply(`${custom.startMessage}`,{parse_mode: 'Markdown'});
+    ctx.reply(`${custom.helpMessage}`,{parse_mode: 'Markdown'})
+
+    //! NEW DEVELOPMENT HAPPENING HERE
+    //* Creating interactive menu
+    bot.telegram.sendMessage(ctx.chat.id, `Let's get started!`, {
+    //? https://telegrambots.github.io/book/2/reply-markup.html 
+        parse_mode: 'Markdown',
+        reply_markup: {
+            inline_keyboard: [
+                [
+                    { text: `Add cookie`, callback_data: `add cookie`}
+                ],
+                [
+                    { text: `Cookie please`, callback_data: `cookie please`}
+                ]
+            ]
+        }
+    });
+
+//! NEW DEVELOPMENT ENDS HERE 
+
     next(ctx);
 })
+
+
 
 //* Handler for the /help command
 bot.help((ctx, next) => {
@@ -346,7 +465,7 @@ bot.help((ctx, next) => {
 })
 
 //* Handler for the /settings command
-//! Currently a placeholder
+//! /settings placeholder
 /*  Possible uses:
 add custom quests
 set custom quest names
@@ -362,10 +481,10 @@ bot.settings((ctx, next) =>{
 //? for learning how to use a wizard
 
 //* Custom command
-//! Currently unused
+//! NEW DEVELOPMENT HAPPENING HERE
 //? For using inline keyboard with callbacks
 //? https://stackoverflow.com/questions/46828965/telegram-bot-inline-keyboard-markup-callback-usage-for-channel-messages
-bot.command(`add`, (ctx) => {
+bot.command(`add`, (ctx, next) => {
     const stringAddInLine = `Which type of cookie?
 Don't want to categorize? Simply type your cookie!`
     ctx.telegram.sendMessage(ctx.chat.id, stringAddInLine,{
@@ -392,6 +511,14 @@ Don't want to categorize? Simply type your cookie!`
     next(ctx);
 })
 
+
+bot.use((ctx, next) => {
+    //TODO Add code to read in a bunch of data from the database
+    //TODO going forward, all this will be managed by ctx.state eg. ctx.state.addCookie
+    
+    next(ctx);
+})
+//! NEW DEVELOPMENT ENDS HERE
 
 
 
