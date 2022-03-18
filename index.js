@@ -238,52 +238,7 @@ ${stringMatches[0]}`);
 // ]
 let arrUpdateWeightRegEx = [/^\+[1-9]+\d*\s*/, /^\-[1-9]+\d*\s*/, /^\+0+\s*|^\-0+\s*|^\+\s*$|^\-\s*$/];
 bot.hears(arrUpdateWeightRegEx,(ctx, next) => {
-
-    // creating a wrapping function so we have an async context
-    const getLastCookie = async () =>  {
-        // get cookie by user_id_telegram
-            const {data: lastServedCookie , error, count} = await supabase
-                .from('user_details')
-                .select(`
-                last_served_cookie_id,
-                cookies!user_details_last_served_cookie_id_fkey (
-                  weight
-                )
-              `)
-                .eq('user_id_telegram',ctx.from.id);
-            
-            if (error) {
-                console.error(error)
-                return
-            }
-            return lastServedCookie
-        }
-        
-        //add the updatedWeight to databse if updatedWeight > 0
-        const updateCookieWeight = async(lastServedCookie, updatedWeight) => {
-            const { data, error } = await supabase
-            .from('cookies')
-            .update([
-                {
-                // text: stringMatches[0],
-                weight: updatedWeight
-                // user_id_telegram: ctx.from.id
-                // type_mini: ;
-                // type_custom_1: ;
-                // type_custom_2: ;
-                // type_custom_3: 
-                }
-            ])
-            .eq(`id`,lastServedCookie[0].last_served_cookie_id)
-                if(error){
-                console.log(`Error while inserting cookie: ${error}`);
-                console.log(error);
-                return;
-            }
-            return data;
-        }
-
-    getLastCookie().then((lastServedCookie) => {
+    custom.getLastCookie(ctx, supabase).then((lastServedCookie) => {
         console.log(lastServedCookie);
         // remove all whitespace acorss the string
         const stringMessage = ctx.message.text.replace(/\s/g, "");
@@ -309,13 +264,13 @@ The ability to delete cookies will be added in the future.`);
                 } //handle positive case
                 else if (regEx.test(stringMessage) && i === 0){
                     // reply with message saying weight increased
-                    updateCookieWeight(lastServedCookie, updatedWeight).then(() => {
+                    custom.updateCookieWeight(lastServedCookie, updatedWeight, supabase).then(() => {
                         console.log(`Cookie weight increased.`)
                     });
                     ctx.reply(`Weight increased from ${weightLastServedCookie} to ${updatedWeight}`);
                 } // handle valid negative case
                 else if (regEx.test(stringMessage) && i === 1 && updatedWeight > 0){
-                    updateCookieWeight(lastServedCookie, updatedWeight).then(() => {
+                    custom.updateCookieWeight(lastServedCookie, updatedWeight, supabase).then(() => {
                         console.log(`Cookie weight decreased.`)
                     });
                     ctx.reply(`Weight reduced from ${weightLastServedCookie} to ${updatedWeight}`);

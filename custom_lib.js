@@ -108,7 +108,50 @@ function getRandInteger(min, max) {
     return Math.floor(Math.random() * (max - min + 1) ) + min;
 }
  
+//* For update cookie weights command
+const getLastCookie = async (ctx, supabase) =>  {
+    // get cookie by user_id_telegram
+        const {data: lastServedCookie , error, count} = await supabase
+            .from('user_details')
+            .select(`
+            last_served_cookie_id,
+            cookies!user_details_last_served_cookie_id_fkey (
+                weight
+            )
+            `)
+            .eq('user_id_telegram',ctx.from.id);
+        
+        if (error) {
+            console.error(error)
+            return
+        }
+        return lastServedCookie
+    }
 
+//* For update cookie weights command
+//add the updatedWeight to databse if updatedWeight > 0
+const updateCookieWeight = async(lastServedCookie, updatedWeight, supabase) => {
+    const { data, error } = await supabase
+    .from('cookies')
+    .update([
+        {
+        // text: stringMatches[0],
+        weight: updatedWeight
+        // user_id_telegram: ctx.from.id
+        // type_mini: ;
+        // type_custom_1: ;
+        // type_custom_2: ;
+        // type_custom_3: 
+        }
+    ])
+    .eq(`id`,lastServedCookie[0].last_served_cookie_id)
+        if(error){
+        console.log(`Error while inserting cookie: ${error}`);
+        console.log(error);
+        return;
+    }
+    return data;
+}
 
 //? EXPORTING MODULES
 module.exports = {
@@ -119,5 +162,7 @@ module.exports = {
     startMessage,
     helpMessage,
     cookiePleaseMessageWhenNoCookieAdded,
-    getUserIDExistsFromSupabase
+    getUserIDExistsFromSupabase,
+    getLastCookie,
+    updateCookieWeight
 };
