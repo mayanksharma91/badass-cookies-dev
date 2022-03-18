@@ -73,6 +73,7 @@ bot.command(`Menu`,(ctx, next) =>{
 bot.action(`add cookie`, (ctx, next) =>{
     // deletes last message we sent
     ctx.deleteMessage();
+    ctx.answerCbQuery();
     //TODO add code to set addCookie flag in database = 1
     //* Creating interactive menu
     menus.addCookieTypeMenu(bot, ctx);
@@ -83,31 +84,16 @@ bot.action(`add cookie`, (ctx, next) =>{
 bot.action(`main menu`, (ctx, next) =>{
     // deletes last message we sent
     ctx.deleteMessage();    
+    ctx.answerCbQuery();
     //TODO add code to set addCookie flag in database = 0
     //* Creating interactive menu
     menus.mainMenu(bot, ctx, `What do you want to do?`);
-
     next(ctx);
 })
 
 //* Cookie please button action
 bot.action(`cookie please`, (ctx, next) =>{
-    // deletes last message we sent
-    // ctx.deleteMessage();
-    // copy of main menu
-    // bot.telegram.sendMessage(ctx.chat.id, `Main Menu`,
-    // {
-    //     reply_markup: {
-    //         inline_keyboard: [
-    //             [
-    //                 { text: `Cookie please`, callback_data: `cookie please`}
-    //             ],
-    //             [
-    //                 { text: `Add cookie`, callback_data: `add cookie`}
-    //             ]
-    //         ]
-    //     }
-    // });
+
     ctx.deleteMessage();
     // creating a wrapping function so we have an async context
     const getCookies = async() =>  {
@@ -128,6 +114,7 @@ bot.action(`cookie please`, (ctx, next) =>{
     getCookies().then((cookies) => {
         const cookieString = custom.getRandomCookie(cookies, ctx, supabase);
         menus.cookiePleaseMenu(bot, ctx, cookieString);
+        ctx.answerCbQuery();
     });
     next(ctx);
 })
@@ -227,10 +214,8 @@ bot.hears(arrAddCookieRegEx, (ctx, next) => {
     }
     //TODO Find a better expression than one disaster below! maybe just insert_cookie()
     Promise.all([insert_cookie()]).finally((returnedData) => {
-        // send reply
-        // Note: Want to send stringMatches data in ctx.reply
-        // hence it was called within async
-        ctx.reply(`Cookie added! Great job :)
+
+    ctx.reply(`Cookie added! Great job :)
 
 Cookie:
 ${stringMatches[0]}`);
@@ -241,10 +226,6 @@ ${stringMatches[0]}`);
 
 /*
 *   ### Update cookie weight command
-- create regEx for handling +# and -# where # is any integer
-- curtail correct weight additions to +1 - regExs for other numbers are just for functionality
-- handle case where new weight is <= 0
-- update new weight in cookies table in the database
 */
 // Array of regular expressions for the handler generated here: https://regexr.com/
 // bot.hears does not accept an array of objects. This is just for documentation
@@ -353,8 +334,7 @@ The ability to delete cookies will be added in the future.`);
 bot.start((ctx, next) => {
         custom.getUserIDExistsFromSupabase(ctx,supabase).then(count =>{
         // TODO if username in database, then set some kind of state variable
-        // if(user_id_telegram == ctx.from.id){
-            if(count !== 0){
+        if(count !== 0){
         // do nothing
         } else {
             // if id is not in table, add it to table
