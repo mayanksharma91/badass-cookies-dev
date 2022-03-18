@@ -1,3 +1,4 @@
+const menus = require("./menus_lib");
 
 //? ### TEXT THAT IS SENT TO USER
 const startMessage = `*Welcome to your Badass Cookie Jar!*
@@ -32,7 +33,7 @@ Eg. add cookie I had never coded in my life. 3 weeks later, I built this bot!`;
 
 
 //? ### FUNCTIONS
-function getRandomCookie(cookies, ctx, supabase){
+function getRandomCookie(cookies, ctx, supabase, bot){
     console.log(`length of cookies: ${cookies.length}`)
     // Takes in array of cookie objects and returns a single cookie as string    
     //! Handle error where there is only one cookie:
@@ -79,7 +80,6 @@ function getRandomCookie(cookies, ctx, supabase){
                 return junkData
             }
             writeLastServedCookieID().then((junkData) => {console.log(`${cookie_string}`)});
-            ctx.reply(`${cookie_string}`);
             return cookie_string;
         }
 }

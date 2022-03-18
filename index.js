@@ -21,8 +21,10 @@ const {Telegraf} = require('telegraf');
 // creating a bot from the telegraf package
 const bot = new Telegraf(process.env.BOT_API_KEY);
 
-// reading functions and constants from custom.js
+// reading functions and constants from custom_lib.js
 const custom = require("./custom_lib");
+// reading menu functions from menus_lib.js
+const menus = require("./menus_lib.js");
 // console.log(custom);
 
 // ###               ###
@@ -60,81 +62,37 @@ bot.command(`Menu`,(ctx, next) =>{
     // });
     
     //* Creating interactive menu
-    bot.telegram.sendMessage(ctx.chat.id, `Main Menu`,
-    {
-        reply_markup: {
-            inline_keyboard: [
-                [
-                    { text: `Cookie please`, callback_data: `cookie please`}
-                ],
-                [
-                    { text: `Add cookie`, callback_data: `add cookie`}
-                ]
-            ]
-        }
-    });
+    menus.mainMenu(bot, ctx, `Main Menu`)
+
     next(ctx);
 });
 
-//* Helper functions for alternative to cookie please
-//* Types of cookies menu
+//* Types of menus
 //? pass data into callback action
 //? https://stackoverflow.com/questions/63991174/telegraf-js-pass-data-from-button-to-a-function-that-handle-a-wizardscene
+
 bot.action(`add cookie`, (ctx, next) =>{
     // deletes last message we sent
     ctx.deleteMessage();
-    
     //TODO add code to set addCookie flag in database = 1
-    
-    // types of cookies
-    bot.telegram.sendMessage(ctx.chat.id, `Which kind of cookie are you adding?`,
-    {
-        reply_markup: {
-            inline_keyboard: [
-                [
-                    { text: `Just any cookie`, callback_data: `add cookie`}
-                ],
-                [
-                    { text: `Custom 1 cookie`, callback_data: `add custom 1 cookie`},
-                    { text: `Custom 2 cookie`, callback_data: `add custom 2 cookie`},
-                    { text: `Custom 3 cookie`, callback_data: `add custom 3 cookie`}
-                ],
-                [
-                    { text: `Back to menu`, callback_data: `Main Menu`}
-                ]
-            ]
-        }
-    });
-
+    //* Creating interactive menu
+    menus.addCookieTypeMenu(bot, ctx);
     next(ctx);
 })
 
-//* Types of cookies menu
-bot.action(`Main Menu`, (ctx, next) =>{
+//* Main Menu - Interactive
+bot.action(`main menu`, (ctx, next) =>{
     // deletes last message we sent
-    ctx.deleteMessage();
-    
+    ctx.deleteMessage();    
     //TODO add code to set addCookie flag in database = 0
-    
-    // copy of main menu
-    bot.telegram.sendMessage(ctx.chat.id, `Waht do you want to do?`,
-    {
-        reply_markup: {
-            inline_keyboard: [
-                [
-                    { text: `Cookie please`, callback_data: `cookie please`}
-                ],
-                [
-                    { text: `Add cookie`, callback_data: `add cookie`}
-                ]
-            ]
-        }
-    });
+    //* Creating interactive menu
+    menus.mainMenu(bot, ctx, `What do you want to do?`);
+
     next(ctx);
 })
 
 //* Types of cookies menu
-bot.action(`Cookie please`, (ctx, next) =>{
+bot.action(`cookie please`, (ctx, next) =>{
     // deletes last message we sent
     // ctx.deleteMessage();
     // copy of main menu
@@ -168,7 +126,10 @@ bot.action(`Cookie please`, (ctx, next) =>{
     }
 
     // get a random cookie from the array of cookie objects
-    getCookies().then((cookies) => {custom.getRandomCookie(cookies, ctx, supabase)});
+    getCookies().then((cookies) => {
+        const cookieString = custom.getRandomCookie(cookies, ctx, supabase);
+        menus.cookiePleaseMenu(bot, ctx, cookieString);
+    });
     next(ctx);
 })
 //?## EXPERIMENTAL- END ###
@@ -213,7 +174,10 @@ bot.hears(arrCookiePleasePhrases, (ctx, next) => {
     }
 
     // get a random cookie from the array of cookie objects
-    getCookies().then((cookies) => {custom.getRandomCookie(cookies, ctx, supabase)});
+    getCookies().then((cookies) => {
+        const cookieString = custom.getRandomCookie(cookies, ctx, supabase);
+        menus.cookiePleaseMenu(bot, ctx, cookieString);
+    });
     next(ctx);
 }) 
 
@@ -433,25 +397,8 @@ bot.start((ctx, next) => {
     })
     ctx.reply(`${custom.startMessage}`,{parse_mode: 'Markdown'});
     ctx.reply(`${custom.helpMessage}`,{parse_mode: 'Markdown'})
-
-    //! NEW DEVELOPMENT HAPPENING HERE
     //* Creating interactive menu
-    bot.telegram.sendMessage(ctx.chat.id, `Let's get started!`, {
-    //? https://telegrambots.github.io/book/2/reply-markup.html 
-        parse_mode: 'Markdown',
-        reply_markup: {
-            inline_keyboard: [
-                [
-                    { text: `Add cookie`, callback_data: `add cookie`}
-                ],
-                [
-                    { text: `Cookie please`, callback_data: `cookie please`}
-                ]
-            ]
-        }
-    });
-
-//! NEW DEVELOPMENT ENDS HERE 
+    menus.helpMenuForStart(bot, ctx);
 
     next(ctx);
 })
@@ -475,41 +422,10 @@ bot.settings((ctx, next) =>{
     next(ctx);
 })
 
+//? for learning how to use a wizard
 //? https://github.com/telegraf/telegraf/issues/705
 //? https://github.com/telegraf/telegraf/issues/428
 //? https://github.com/telegraf/telegraf/issues/221
-//? for learning how to use a wizard
-
-//* Custom command
-//! NEW DEVELOPMENT HAPPENING HERE
-//? For using inline keyboard with callbacks
-//? https://stackoverflow.com/questions/46828965/telegram-bot-inline-keyboard-markup-callback-usage-for-channel-messages
-bot.command(`add`, (ctx, next) => {
-    const stringAddInLine = `Which type of cookie?
-Don't want to categorize? Simply type your cookie!`
-    ctx.telegram.sendMessage(ctx.chat.id, stringAddInLine,{
-        reply_markup: {
-            // array of array of Keyboard Button - https://core.telegram.org/bots/api#keyboardbutton
-            inline_keyboard: [
-                [
-                    // TODO Currently replies with this text
-                    // TODO could use switch_inline_query_inline_chat
-                    // https://core.telegram.org/bots/api#inlinekeyboardbutton
-                    {text: `add cookie`, callback_data: `add cookie`}
-                ],
-                [
-                    {text: `add custom1 cookie`, callback_data: `add custom1 cookie`},
-                    {text: `add custom2 cookie`, callback_data: `add custom2 cookie`},
-                    {text: `add custom3 cookie`, callback_data: `add custom3 cookie`}
-                ]
-
-            ],
-            resize_keyboard: true,
-            one_time_keyboard: true
-        }
-    })
-    next(ctx);
-})
 
 
 bot.use((ctx, next) => {
@@ -531,17 +447,6 @@ process.once('SIGTERM', () => bot.stop('SIGTERM'));
 
 /*
 ? ### To do list for MVP - prioritized
-* --- Randomization of cookie please - DONE
----- Edit cookie weight
-- PostgreSQL function to increment weight of latest added cookie for user
-
----- Encapsulate the whole script within bot.use()
-- Start with const validMessage = 0
-- Each function sets validMessage = 1
-- At the end if validMessage === 0 then reply with ${helpMessage} with added line on top
-
----- Copy edit all messages, especially /start and /help
-
 --- create a user_action_log table in supabase:
 each row will have:
 user.id, telegram_user_id,
@@ -555,16 +460,13 @@ bot reply, time of bot reply
 ---- Set up unicornplatform website
 - CTA captures user's name, email and takes user to telegram bot\
 
----- Buy badass-cookies.com
+---- Buy badass-cookies.com /thetinywins.com
 - Point unicornplatform website to this domain
 
 ! ### Product Backlog - unprioritized
 ---- Custom quests
 Column in user_details table that specifies number of quests created
 Columns for each quest in user_details OR a separate quests table 
-
----- Negative cookie weight - case for negative weights
-If negative weight is added and new weight <= 0, then ask user if they want to delete the cookie
 
 ---- /add command or plain text add cookie command shows inline keyboard with quests
 - button press: `add <custom> cookie` is typed in chat for ease of use
