@@ -33,7 +33,6 @@ const menus = require("./menus_lib.js");
 
 //! NEW DEVELOPMENT HAPPENING HERE
 //?## EXPERIMENTAL- BEGIN ###
-// * Alternative to add cookie
 // Educational note:
 // next(cxt) passes cxt object the next handler so you can modify properties like `state`
 bot.command(`Menu`,(ctx, next) =>{
@@ -91,7 +90,7 @@ bot.action(`main menu`, (ctx, next) =>{
     next(ctx);
 })
 
-//* Types of cookies menu
+//* Cookie please button action
 bot.action(`cookie please`, (ctx, next) =>{
     // deletes last message we sent
     // ctx.deleteMessage();
@@ -350,28 +349,9 @@ The ability to delete cookies will be added in the future.`);
 ?   ### SLASH COMMANDS ###
 /start, /help, /settings are core commands in telegraf
 */
-//* helper function for the /start command
-const getUserIDExistsFromSupabase = async(user_id) =>  {
-    // returns count of user_id__telegram from supabase which serves as boolean for user exists
-        const { data, error, count } = await supabase
-            .from('user_details')
-            .select('user_id_telegram', { count: 'exact', head: true })
-            .eq('user_id_telegram',user_id);
-        
-        if (error) {
-            console.error(error)
-            return
-        } else{
-            console.log(count)
-            console.log(user_id)
-            return count
-        }
-    }
-
-
 //* Handler for the /start command
 bot.start((ctx, next) => {
-        getUserIDExistsFromSupabase(ctx.from.id).then(count =>{
+        custom.getUserIDExistsFromSupabase(ctx,supabase).then(count =>{
         // TODO if username in database, then set some kind of state variable
         // if(user_id_telegram == ctx.from.id){
             if(count !== 0){
@@ -434,7 +414,6 @@ bot.use((ctx, next) => {
     
     next(ctx);
 })
-//! NEW DEVELOPMENT ENDS HERE
 
 
 
@@ -445,32 +424,4 @@ bot.launch()
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
 
-/*
-? ### To do list for MVP - prioritized
---- create a user_action_log table in supabase:
-each row will have:
-user.id, telegram_user_id,
-time of their message, their message,
-bot reply, time of bot reply
 
----- Deploy on Herkou
-- see youtube video 
-- remember to use dotenv (must) and pm2 (optional) 
-
----- Set up unicornplatform website
-- CTA captures user's name, email and takes user to telegram bot\
-
----- Buy badass-cookies.com /thetinywins.com
-- Point unicornplatform website to this domain
-
-! ### Product Backlog - unprioritized
----- Custom quests
-Column in user_details table that specifies number of quests created
-Columns for each quest in user_details OR a separate quests table 
-
----- /add command or plain text add cookie command shows inline keyboard with quests
-- button press: `add <custom> cookie` is typed in chat for ease of use
----- Change weight to frequency - currently confusing
-Ideally higher weight cookies, i.e. more important should be shown less to retain potency
-
-*/

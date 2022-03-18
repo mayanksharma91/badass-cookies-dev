@@ -84,6 +84,24 @@ function getRandomCookie(cookies, ctx, supabase, bot){
         }
 }
 
+//* helper function for the /start command
+const getUserIDExistsFromSupabase = async(ctx, supabase) =>  {
+    // returns count of user_id__telegram from supabase which serves as boolean for user exists
+        const { data, error, count } = await supabase
+            .from('user_details')
+            .select('user_id_telegram', { count: 'exact', head: true })
+            .eq('user_id_telegram',ctx.from.id);
+        
+        if (error) {
+            console.error(error)
+            return
+        } else{
+            // console.log(count)
+            // console.log(user_id)
+            return count
+        }
+    }
+
 
 function getRandInteger(min, max) {
     // Returns random integer between min and max, both inclusive
@@ -100,5 +118,6 @@ module.exports = {
     //* messages as constants
     startMessage,
     helpMessage,
-    cookiePleaseMessageWhenNoCookieAdded
+    cookiePleaseMessageWhenNoCookieAdded,
+    getUserIDExistsFromSupabase
 };
