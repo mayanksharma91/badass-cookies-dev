@@ -13,10 +13,9 @@ const supabase = createClient(process.env.SUPABASE_API_URL, process.env.SUPABASE
 
 // Require Telegraf package by creating a telegraf object
 const {Telegraf} = require('telegraf');
-// Educational note:
-// Constructor functions generally start with an upper case letter
+// Educational note: Constructor functions generally start with an upper case letter
 // You need curly braces here since you're destructuring the object
-// read more here - https://stackoverflow.com/questions/38660022/curly-brackets-braces-in-node-js-require-statement
+// read here - https://stackoverflow.com/questions/38660022/curly-brackets-braces-in-node-js-require-statement
 
 // creating a bot from the telegraf package
 const bot = new Telegraf(process.env.BOT_API_KEY);
@@ -36,33 +35,8 @@ const menus = require("./menus_lib.js");
 // Educational note:
 // next(cxt) passes cxt object the next handler so you can modify properties like `state`
 bot.command(`Menu`,(ctx, next) =>{
-    // const insert_user_id = async() => {
-    //     const { data, error } = await supabase
-    //         .from('user_details')
-    //         .insert([
-    //             {
-    //                 user_id_telegram: ctx.from.id,
-    //                 username_telegram: ctx.from.username,
-    //                 first_name_telegram: ctx.from.first_name,
-    //                 last_name_telegram: ctx.from.last_name,
-    //                 type_telegram: ctx.from.type
-    //             }
-    //         ])
-    //     if (error) {
-    //         console.error(error)
-    //         return
-    //     }
-    //     return data
-
-    // }        
-
-    // insert_user_id().then(() => {
-    //     console.log(`USE HANDLER: user entry added`)
-    // });
-    
     //* Creating interactive menu
     menus.mainMenu(bot, ctx, `Main Menu`)
-
     next(ctx);
 });
 
@@ -93,7 +67,6 @@ bot.action(`main menu`, (ctx, next) =>{
 
 //* Cookie please button action
 bot.action(`cookie please`, (ctx, next) =>{
-
     ctx.deleteMessage();
     // creating a wrapping function so we have an async context
     const getCookies = async() =>  {
@@ -141,7 +114,6 @@ bot.action(`cookie please`, (ctx, next) =>{
 const arrCookiePleasePhrases = [`cookie please`, `cookie`, `cookie plz`,`cookie pls`,
 `Cookie please`, `Cookie`,`Cookie plz`, `Cookie pls`]
 
-// 
 bot.hears(arrCookiePleasePhrases, (ctx, next) => {
     ctx.deleteMessage();
     // creating a wrapping function so we have an async context
@@ -188,7 +160,6 @@ bot.hears(arrAddCookieRegEx, (ctx, next) => {
             stringMatches.push(stringMessage.replace(regEx,""));
         }
     })
-    // console.log(ctx)
     // insert cookie to cookies table in Supabase
     const insert_cookie = async() => {
         const { data, error } = await supabase
@@ -212,11 +183,8 @@ bot.hears(arrAddCookieRegEx, (ctx, next) => {
         }
         return data;
     }
-    //TODO Find a better expression than one disaster below! maybe just insert_cookie()
-    Promise.all([insert_cookie()]).finally((returnedData) => {
-
+    insert_cookie().finally((returnedData) => {
     ctx.reply(`Cookie added! Great job :)
-
 Cookie:
 ${stringMatches[0]}`);
     // pass the context only after the data has been submitted
@@ -224,9 +192,8 @@ ${stringMatches[0]}`);
     });
 });
 
-/*
-*   ### Update cookie weight command
-*/
+
+// *   ### Update cookie weight command
 // Array of regular expressions for the handler generated here: https://regexr.com/
 // bot.hears does not accept an array of objects. This is just for documentation
 // All cases allow for whitespaces and end of string
@@ -281,10 +248,8 @@ The ability to delete cookies will be added in the future.`);
     next(ctx);
 });
 
-/*
-?   ### SLASH COMMANDS ###
-/start, /help, /settings are core commands in telegraf
-*/
+//?   ### SLASH COMMANDS ###
+// /start, /help, /settings are core commands in telegraf
 //* Handler for the /start command
 bot.start((ctx, next) => {
         custom.getUserIDExistsFromSupabase(ctx,supabase).then(count =>{
@@ -294,7 +259,7 @@ bot.start((ctx, next) => {
         } else {
             // if id is not in table, add it to table
             console.log(`count: ${count}`);
-            const insert_user_id = async() => {
+            const insertUserID = async() => {
                 const { data, error } = await supabase
                     .from('user_details')
                     .insert([
@@ -307,7 +272,7 @@ bot.start((ctx, next) => {
                         }
                     ])
             }
-            insert_user_id();
+            insertUserID();
         }
     })
     ctx.reply(`${custom.startMessage}`,{parse_mode: 'Markdown'});
@@ -317,8 +282,6 @@ bot.start((ctx, next) => {
 
     next(ctx);
 })
-
-
 
 //* Handler for the /help command
 bot.help((ctx, next) => {
@@ -342,15 +305,31 @@ bot.settings((ctx, next) =>{
 //? https://github.com/telegraf/telegraf/issues/428
 //? https://github.com/telegraf/telegraf/issues/221
 
-
 bot.use((ctx, next) => {
-    //TODO Add code to read in a bunch of data from the database
-    //TODO going forward, all this will be managed by ctx.state eg. ctx.state.addCookie
-    
+    const readUserDetails = async() => {
+        const { data, error } = await supabase
+            .from(`user_details`)
+            .select(`
+                    user_id_telegram,
+                    username_telegram,
+                    first_name_telegram,
+                    last_name_telegram,
+                    type_telegram,
+                    last_served_cookie_id,
+                    on_add_cookie`
+                    )
+            .eq(`user_id_telegram`, ctx.from.id);
+        if (error) {
+            console.error(error);
+            return;
+        }
+        // set state property of ctx object for use across commands
+        ctx.state = data;
+        return data;
+    }
+    readUserDetails();
     next(ctx);
 })
-
-
 
 // ### LAUNCH BOT ###
 console.log(`##### BOT STARTED #####`)
