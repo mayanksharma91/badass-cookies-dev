@@ -46,7 +46,7 @@ bot.command(`Menu`,(ctx, next) =>{
 
 bot.action(`add cookie`, (ctx, next) =>{
     // deletes last message we sent
-    ctx.deleteMessage();
+    // ctx.deleteMessage();
     ctx.answerCbQuery();
     //TODO add code to set addCookie flag in database = 1
     //* Creating interactive menu
@@ -57,7 +57,7 @@ bot.action(`add cookie`, (ctx, next) =>{
 //* Main Menu - Interactive
 bot.action(`main menu`, (ctx, next) =>{
     // deletes last message we sent
-    ctx.deleteMessage();    
+    // ctx.deleteMessage();    
     ctx.answerCbQuery();
     //TODO add code to set addCookie flag in database = 0
     //* Creating interactive menu
@@ -67,7 +67,7 @@ bot.action(`main menu`, (ctx, next) =>{
 
 //* Cookie please button action
 bot.action(`cookie please`, (ctx, next) =>{
-    ctx.deleteMessage();
+    // ctx.deleteMessage();
     // creating a wrapping function so we have an async context
     const getCookies = async() =>  {
     // get cookie by user_id_telegram
@@ -115,7 +115,7 @@ const arrCookiePleasePhrases = [`cookie please`, `cookie`, `cookie plz`,`cookie 
 `Cookie please`, `Cookie`,`Cookie plz`, `Cookie pls`]
 
 bot.hears(arrCookiePleasePhrases, (ctx, next) => {
-    ctx.deleteMessage();
+    // ctx.deleteMessage();
     // creating a wrapping function so we have an async context
     const getCookies = async() =>  {
     // get cookie by user_id_telegram
@@ -330,6 +330,14 @@ bot.use((ctx, next) => {
     readUserDetails();
     next(ctx);
 })
+
+// 
+// bot.command('deleteKeyboardMarkup', (ctx,next) => {
+//     bot.telegram.sendMessage(ctx.chat.id, `Keyboard Markup Deleted`, {
+//         parse_mode: 'Markdown',
+//         reply_markup: {remove_keyboard: true}});
+//     next(ctx);
+// });
 
 // ### LAUNCH BOT ###
 console.log(`##### BOT STARTED #####`)

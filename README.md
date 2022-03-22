@@ -31,7 +31,7 @@ bot reply, time of bot reply
 
 ---- Deploy on Herkou
 - see youtube video 
-- remember to use dotenv (must) and pm2 (optional) 
+- use pm2 
 
 ---- Set up unicornplatform website
 - CTA captures user's name, email and takes user to telegram bot\
@@ -44,7 +44,5 @@ bot reply, time of bot reply
 Column in user_details table that specifies number of quests created
 Columns for each quest in user_details OR a separate quests table 
 
----- /add command or plain text add cookie command shows inline keyboard with quests
-- button press: `add <custom> cookie` is typed in chat for ease of use
 ---- Change weight to frequency - currently confusing
 Ideally higher weight cookies, i.e. more important should be shown less to retain potency
