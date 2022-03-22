@@ -1,10 +1,9 @@
 
 // Menu for when a user presses 'Add cookie' in either mainMenu or helpMenuForStart
 function addCookieTypeMenu(bot, ctx){
-    // deletes last message we sent
-    ctx.deleteMessage();
-
-    bot.telegram.sendMessage(ctx.chat.id, `Which kind of cookie are you adding?`, {
+    const messageString = `Please type your cookie.
+If you don't want to, click *Back to menu*`
+    bot.telegram.sendMessage(ctx.chat.id, `${messageString}`, {
         parse_mode: 'Markdown',        
         reply_markup: {
             inline_keyboard: [

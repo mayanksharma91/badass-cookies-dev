@@ -30,8 +30,121 @@ const menus = require("./menus_lib.js");
 //?###  CODE  BEGINS ###
 // ###               ###
 
-//! NEW DEVELOPMENT HAPPENING HERE
-//?## EXPERIMENTAL- BEGIN ###
+//?   ### SLASH COMMANDS ###
+// /start, /help, /settings are core commands in telegraf
+//* Handler for the /start command
+bot.start((ctx, next) => {
+    custom.getUserIDExistsFromSupabase(ctx,supabase).then(count =>{
+        if(count !== 0){
+            console.log(`user already exists`);
+            // using a series of setTimeouts to ensure they appear in a deterministic order
+            setTimeout(() => {ctx.reply(`${custom.startMessage}`,{parse_mode: 'Markdown'})},0);
+            setTimeout(() => {ctx.reply(`${custom.helpMessage}`,{parse_mode: 'Markdown'})},10);
+            //* Creating interactive menu
+            setTimeout(() => {menus.helpMenuForStart(bot, ctx)},30);
+        } else {
+            // if id is not in table, add it to table
+            console.log(`count: ${count}`);
+            const insertUserID = async() => {
+                const { data, error } = await supabase
+                    .from('user_details')
+                    .insert([
+                        {
+                            user_id_telegram: ctx.from.id,
+                            username_telegram: ctx.from.username,
+                            first_name_telegram: ctx.from.first_name,
+                            last_name_telegram: ctx.from.last_name,
+                            type_telegram: ctx.from.type
+                        }
+                    ])
+            }
+            
+            insertUserID()
+            .then(() => {ctx.reply(`${custom.startMessage}`,{parse_mode: 'Markdown'});})
+            .then(() => {ctx.reply(`${custom.helpMessage}`,{parse_mode: 'Markdown'});})           
+            //* Creating interactive menu
+            .then(() => {menus.helpMenuForStart(bot, ctx);});  
+        }
+    })
+next(ctx);
+})
+
+//* Handler for the /help command
+bot.help((ctx, next) => {
+ctx.reply(`${custom.helpMessage}`,{parse_mode: 'Markdown'});
+next(ctx);
+})
+
+//* Handler for the /settings command
+//! /settings placeholder
+/*  Possible uses:
+add custom quests
+set custom quest names
+*/
+bot.settings((ctx, next) =>{
+ctx.reply(`It's YOUR cookie jar. Set it up how you need it!`);
+next(ctx);
+})
+
+//?    ### BOT USE COMMAND   ###
+// It reads in user_details from the database and updates ctx.state
+// Also, if on_add_cookie flag is set, it adds that message string as a cookie
+// and then resets the on_add_cookie flag to 0
+// in the future, this functionality will be handled with the scene wizard
+// for learning how to use a scene wizard
+// https://github.com/telegraf/telegraf/issues/705
+// https://github.com/telegraf/telegraf/issues/428
+// https://github.com/telegraf/telegraf/issues/221
+
+bot.use((ctx, next) => {
+    console.log(`-----> Entered bot.use`);
+    const readUserDetails = async() => {
+        const { data, error } = await supabase
+            .from(`user_details`)
+            .select(`
+                    user_id_telegram,
+                    username_telegram,
+                    first_name_telegram,
+                    last_name_telegram,
+                    type_telegram,
+                    last_served_cookie_id,
+                    on_add_cookie`
+                    )
+            .eq(`user_id_telegram`, ctx.from.id);
+        if (error) {
+            console.error(error);
+            return;
+        }
+        // set state property of ctx object for use across commands
+        ctx.state = data;
+        return data;
+    }
+    readUserDetails().then(()=>{
+        console.log(ctx.state);
+        // if a cookie is expected from the user
+        if (ctx.state[0].on_add_cookie === 1){
+            console.log(`Succesfully handled adding cookie as next message.`);
+            // add the cookie
+            custom.insertCookie(ctx.message.text, ctx, supabase)
+            .then(()=>{
+                menus.mainMenu(bot,ctx,`Cookie added!
+What would you like to do now?`);
+            })
+            // set on_add_cookie flag and ctx.state to 0 since we no longer expect a cookie
+            .then(()=>{
+                custom.updateAddCookieFlag(ctx.from.id, 0, supabase)
+                .then(()=> {
+                    ctx.state[0].on_add_cookie = 0;
+                    console.log(`After adding cookie, on_add_cookie flag set to: ${ctx.state[0].on_add_cookie}`);
+                })
+            })
+        } 
+    next(ctx);
+    });
+})
+
+
+//?## INLINE MENU ACTIONS- Begin ###
 // Educational note:
 // next(cxt) passes cxt object the next handler so you can modify properties like `state`
 bot.command(`Menu`,(ctx, next) =>{
@@ -47,10 +160,19 @@ bot.command(`Menu`,(ctx, next) =>{
 bot.action(`add cookie`, (ctx, next) =>{
     // deletes last message we sent
     // ctx.deleteMessage();
+    console.log(`-----> Entered bot.action(add cookie)`);
+    console.log(`In bot.action add cookie, state is:`);
+    console.log(ctx.state[0]);
     ctx.answerCbQuery();
     //TODO add code to set addCookie flag in database = 1
-    //* Creating interactive menu
-    menus.addCookieTypeMenu(bot, ctx);
+    custom.updateAddCookieFlag(ctx.from.id, 1, supabase)
+    .then(() => {
+        //* Creating interactive menu
+        menus.addCookieTypeMenu(bot, ctx);
+        console.log(`bot.action(add cookie) has state:`);
+        console.log(ctx.state[0]);
+    })
+    .catch(error => alert(error.message));     
     next(ctx);
 })
 
@@ -60,13 +182,21 @@ bot.action(`main menu`, (ctx, next) =>{
     // ctx.deleteMessage();    
     ctx.answerCbQuery();
     //TODO add code to set addCookie flag in database = 0
-    //* Creating interactive menu
-    menus.mainMenu(bot, ctx, `What do you want to do?`);
+    custom.updateAddCookieFlag(ctx.from.id, 0, supabase)
+    .then(()=>{
+        //* Creating interactive menu
+        menus.mainMenu(bot, ctx, `What do you want to do?`);
+    })
+    .catch(error => alert(error.message));   
     next(ctx);
 })
 
 //* Cookie please button action
 bot.action(`cookie please`, (ctx, next) =>{
+    if (ctx.state[0].on_add_cookie === 1) {
+        custom.updateAddCookieFlag(ctx.from.id, 0, supabase);
+    }
+    
     // ctx.deleteMessage();
     // creating a wrapping function so we have an async context
     const getCookies = async() =>  {
@@ -91,8 +221,7 @@ bot.action(`cookie please`, (ctx, next) =>{
     });
     next(ctx);
 })
-//?## EXPERIMENTAL- END ###
-//! NEW DEVELOPMENT ENDS HERE
+//?## INLINE MENU ACTIONS- End ###
 
 //? ### TEXT COMMANDS ###
 // Normal text commands handled with `hears`
@@ -160,30 +289,8 @@ bot.hears(arrAddCookieRegEx, (ctx, next) => {
             stringMatches.push(stringMessage.replace(regEx,""));
         }
     })
-    // insert cookie to cookies table in Supabase
-    const insert_cookie = async() => {
-        const { data, error } = await supabase
-        .from('cookies')
-        .insert([
-            {
-            text: stringMatches[0],
-            // TODO make weight and type customizable based on cookie type
-            // weight: ,
-            user_id_telegram: ctx.from.id
-            // type_mini: ;
-            // type_custom_1: ;
-            // type_custom_2: ;
-            // type_custom_3: 
-            }
-        ])
-         if(error){
-            console.log(`Error while inserting cookie: ${error}`);
-            console.log(error);
-            return;
-        }
-        return data;
-    }
-    insert_cookie().finally((returnedData) => {
+    // add cookie
+    custom.insertCookie(stringMatches[0], ctx, supabase).finally((returnedData) => {
     ctx.reply(`Cookie added! Great job :)
 Cookie:
 ${stringMatches[0]}`);
@@ -248,88 +355,11 @@ The ability to delete cookies will be added in the future.`);
     next(ctx);
 });
 
-//?   ### SLASH COMMANDS ###
-// /start, /help, /settings are core commands in telegraf
-//* Handler for the /start command
-bot.start((ctx, next) => {
-        custom.getUserIDExistsFromSupabase(ctx,supabase).then(count =>{
-        // TODO if username in database, then set some kind of state variable
-        if(count !== 0){
-        // do nothing
-        } else {
-            // if id is not in table, add it to table
-            console.log(`count: ${count}`);
-            const insertUserID = async() => {
-                const { data, error } = await supabase
-                    .from('user_details')
-                    .insert([
-                        {
-                            user_id_telegram: ctx.from.id,
-                            username_telegram: ctx.from.username,
-                            first_name_telegram: ctx.from.first_name,
-                            last_name_telegram: ctx.from.last_name,
-                            type_telegram: ctx.from.type
-                        }
-                    ])
-            }
-            insertUserID();
-        }
-    })
-    ctx.reply(`${custom.startMessage}`,{parse_mode: 'Markdown'});
-    ctx.reply(`${custom.helpMessage}`,{parse_mode: 'Markdown'})
-    //* Creating interactive menu
-    menus.helpMenuForStart(bot, ctx);
 
-    next(ctx);
-})
 
-//* Handler for the /help command
-bot.help((ctx, next) => {
-    ctx.reply(`${custom.helpMessage}`,{parse_mode: 'Markdown'});
-    next(ctx);
-})
 
-//* Handler for the /settings command
-//! /settings placeholder
-/*  Possible uses:
-add custom quests
-set custom quest names
-*/
-bot.settings((ctx, next) =>{
-    ctx.reply(`It's YOUR cookie jar. Set it up how you need it!`);
-    next(ctx);
-})
 
-//? for learning how to use a wizard
-//? https://github.com/telegraf/telegraf/issues/705
-//? https://github.com/telegraf/telegraf/issues/428
-//? https://github.com/telegraf/telegraf/issues/221
 
-bot.use((ctx, next) => {
-    const readUserDetails = async() => {
-        const { data, error } = await supabase
-            .from(`user_details`)
-            .select(`
-                    user_id_telegram,
-                    username_telegram,
-                    first_name_telegram,
-                    last_name_telegram,
-                    type_telegram,
-                    last_served_cookie_id,
-                    on_add_cookie`
-                    )
-            .eq(`user_id_telegram`, ctx.from.id);
-        if (error) {
-            console.error(error);
-            return;
-        }
-        // set state property of ctx object for use across commands
-        ctx.state = data;
-        return data;
-    }
-    readUserDetails();
-    next(ctx);
-})
 
 // 
 // bot.command('deleteKeyboardMarkup', (ctx,next) => {

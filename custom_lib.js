@@ -145,6 +145,51 @@ const updateCookieWeight = async(lastServedCookie, updatedWeight, supabase) => {
         }
     ])
     .eq(`id`,lastServedCookie[0].last_served_cookie_id)
+    if(error){
+        console.log(`Error while inserting cookie: ${error}`);
+        console.log(error);
+        return;
+    }
+    return data;
+}
+
+//* Update add cookie flag in supabase
+//add the updatedWeight to databse if updatedWeight > 0
+const updateAddCookieFlag = async(user_id, flag, supabase) => {
+    console.log(`-----> Entered updateAddCookieFlag`);
+    console.log(`flag passed into fuction: ${flag}`);
+    const { data, error } = await supabase
+    .from('user_details')
+    .update([
+        {
+            on_add_cookie: flag
+        }
+    ])
+    .eq(`user_id_telegram`,`${user_id}`)
+    // if(error){
+    //     console.log(`Error while updating on_add_cookie flag: ${error}`);
+    //     console.error(error);
+    //     return;
+    // }
+    return data;
+}
+
+//* Insert cookie to cookies table in Supabase
+const insertCookie = async(cookieString, ctx, supabase) => {
+    const { data, error } = await supabase
+    .from('cookies')
+    .insert([
+        {
+        text: `${cookieString}`,
+        // TODO make weight and type customizable based on cookie type
+        // weight: ,
+        user_id_telegram: ctx.from.id
+        // type_mini: ;
+        // type_custom_1: ;
+        // type_custom_2: ;
+        // type_custom_3: 
+        }
+    ])
         if(error){
         console.log(`Error while inserting cookie: ${error}`);
         console.log(error);
@@ -152,6 +197,7 @@ const updateCookieWeight = async(lastServedCookie, updatedWeight, supabase) => {
     }
     return data;
 }
+
 
 //? EXPORTING MODULES
 module.exports = {
@@ -164,5 +210,7 @@ module.exports = {
     cookiePleaseMessageWhenNoCookieAdded,
     getUserIDExistsFromSupabase,
     getLastCookie,
-    updateCookieWeight
+    updateCookieWeight,
+    updateAddCookieFlag,
+    insertCookie
 };

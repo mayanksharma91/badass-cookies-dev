@@ -23,15 +23,17 @@
 
 
 ## To do list for MVP - prioritized
+--- test /start message order for new user
+
+---- Deploy on Herkou
+- see youtube video 
+- use pm2 
+
 --- create a user_action_log table in supabase:
 each row will have:
 user.id, telegram_user_id,
 time of their message, their message,
 bot reply, time of bot reply
-
----- Deploy on Herkou
-- see youtube video 
-- use pm2 
 
 ---- Set up unicornplatform website
 - CTA captures user's name, email and takes user to telegram bot\
@@ -44,5 +46,5 @@ bot reply, time of bot reply
 Column in user_details table that specifies number of quests created
 Columns for each quest in user_details OR a separate quests table 
 
----- Change weight to frequency - currently confusing
+---- Change variable name weight to frequency - currently confusing
 Ideally higher weight cookies, i.e. more important should be shown less to retain potency
