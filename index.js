@@ -194,6 +194,7 @@ bot.action(`main menu`, (ctx, next) =>{
 
 //* Cookie please button action
 bot.action(`cookie please`, (ctx, next) =>{
+    // killing expectation for cookie text
     if (ctx.state[0].on_add_cookie === 1) {
         custom.updateAddCookieFlag(ctx.from.id, 0, supabase);
     }
@@ -215,10 +216,14 @@ bot.action(`cookie please`, (ctx, next) =>{
     }
 
     // get a random cookie from the array of cookie objects
+    // set cookiePlease Flag to 1 so we expect an update of weights
     getCookies().then((cookies) => {
         const cookieString = custom.getRandomCookie(cookies, ctx, supabase);
         menus.cookiePleaseMenu(bot, ctx, cookieString);
         ctx.answerCbQuery();
+    })
+    .then(()=> {
+        custom.updateCookiePleaseFlag(ctx.from.id, 1, supabase);
     });
     next(ctx);
 })
@@ -246,8 +251,11 @@ What do you want to do next?`)
             });       
         });
     } else if (ctx.state[0].on_cookie_please === 0){
-        ctx.reply(`You can change the frequency the next time you see this cookie.`)
+        menus.mainMenu(bot, ctx, `Please change the frequency the next time you see this cookie 🙂.
+
+What do you want to do next?`);
     }  
+    ctx.answerCbQuery();
     next(ctx);
 });
 
@@ -272,20 +280,23 @@ What do you want to do next?`)
                 })
                 .then(()=> {
                     ctx.state[0].on_cookie_please = 0;
-                    console.log(`After adding cookie, on_cookie_please flag set to: ${ctx.state[0].on_cookie_please}`);
+                    console.log(`After updating cookie weight, on_cookie_please flag set to: ${ctx.state[0].on_cookie_please}`);
                 });                 
             }
             // do nothing except set updateCookiePleaseFlag to 0
             else {
                 custom.updateCookiePleaseFlag(ctx.from.id, 0, supabase);
                 console.log(`Cookie weight already 1.`)
-                ctx.reply(`The cookie is already at lowest frequency.
-The ability to delete cookies will be added in the future 🙂`)
+                menus.mainMenu(bot,ctx,`The cookie is already at lowest frequency.
+The ability to delete cookies will be added in the future 🙂`);
             }       
         });
     } else if (ctx.state[0].on_cookie_please === 0){
-        ctx.reply(`Please change the frequency the next time you see this cookie.`)
+        menus.mainMenu(bot,ctx,`Please change the frequency the next time you see this cookie.
+
+What do you want to do next?`)
     }  
+    ctx.answerCbQuery();
     next(ctx);
 });
 
