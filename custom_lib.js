@@ -174,6 +174,26 @@ const updateAddCookieFlag = async(user_id, flag, supabase) => {
     return data;
 }
 
+//* Update cookie please flag in supabase
+const updateCookiePleaseFlag = async(user_id, flag, supabase) => {
+    console.log(`-----> Entered updateCookiePleaseFlag`);
+    console.log(`flag passed into fuction: ${flag}`);
+    const { data, error } = await supabase
+    .from('user_details')
+    .update([
+        {
+            on_cookie_please: flag
+        }
+    ])
+    .eq(`user_id_telegram`,`${user_id}`)
+    // if(error){
+    //     console.log(`Error while updating on_add_cookie flag: ${error}`);
+    //     console.error(error);
+    //     return;
+    // }
+    return data;
+}
+
 //* Insert cookie to cookies table in Supabase
 const insertCookie = async(cookieString, ctx, supabase) => {
     const { data, error } = await supabase
@@ -198,6 +218,17 @@ const insertCookie = async(cookieString, ctx, supabase) => {
     return data;
 }
 
+// //* ### Trying quests out for cookie please command
+// const strQuest1 = ctx.state.quest1;
+// const strForQuest1RegEx = `^\\s*(\\b`+`${strQuest1}`+`\\b)*\\s*`;
+// const quest1RegEx = new RegExp(strForQuest1RegEx + `\\bcookie\\b\\s*\\bplease\\b\\s*$`);
+// let arrCookiePleaseRegEx = [];
+// arrCookiePleaseRegEx.push(quest1RegEx)
+// console.log(arrCookiePleaseRegEx);
+// // const arrCookiePleaseRegEx = [/^\s*(\bcoding\b)*\s*\bcookie\b\s*\bplease\b\s*$/i];
+// bot.hears(arrCookiePleaseRegEx, (ctx,next) => {
+//     console.log(`Dynamic quests are now possible! Maybe! Hehe!`)
+// });
 
 //? EXPORTING MODULES
 module.exports = {
@@ -212,5 +243,6 @@ module.exports = {
     getLastCookie,
     updateCookieWeight,
     updateAddCookieFlag,
-    insertCookie
+    insertCookie,
+    updateCookiePleaseFlag
 };

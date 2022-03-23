@@ -108,7 +108,8 @@ bot.use((ctx, next) => {
                     last_name_telegram,
                     type_telegram,
                     last_served_cookie_id,
-                    on_add_cookie`
+                    on_add_cookie,
+                    on_cookie_please`
                     )
             .eq(`user_id_telegram`, ctx.from.id);
         if (error) {
@@ -153,7 +154,7 @@ bot.command(`Menu`,(ctx, next) =>{
     next(ctx);
 });
 
-//* Types of menus
+//* Add cookie
 //? pass data into callback action
 //? https://stackoverflow.com/questions/63991174/telegraf-js-pass-data-from-button-to-a-function-that-handle-a-wizardscene
 
@@ -221,23 +222,78 @@ bot.action(`cookie please`, (ctx, next) =>{
     });
     next(ctx);
 })
+
+//* Update weight after cookie please action
+//* +1
+bot.action(`+1`, (ctx, next) =>{
+    // Check if we actually expect a response to update the weight
+    if (ctx.state[0].on_cookie_please === 1){
+        custom.getLastCookie(ctx, supabase)
+        .then((lastServedCookie) => {
+            let updatedWeight = Number(lastServedCookie[0]['cookies']['weight']) + 1;
+            custom.updateCookieWeight(lastServedCookie, updatedWeight, supabase)
+            .then(() => {
+                menus.mainMenu(bot, ctx, `Great! This cookie will be shown more often.
+What do you want to do next?`)
+                console.log(`Cookie weight increased.`)
+            })
+            .then(()=>{
+                custom.updateCookiePleaseFlag(ctx.from.id, 0, supabase)
+            })
+            .then(()=> {
+                ctx.state[0].on_cookie_please = 0;
+                console.log(`After adding cookie, on_cookie_please flag set to: ${ctx.state[0].on_cookie_please}`);
+            });       
+        });
+    } else if (ctx.state[0].on_cookie_please === 0){
+        ctx.reply(`You can change the frequency the next time you see this cookie.`)
+    }  
+    next(ctx);
+});
+
+//* Update weight after cookie please action
+//* -1
+bot.action(`-1`, (ctx, next) =>{
+    // Check if we actually expect a response to update the weight
+    if (ctx.state[0].on_cookie_please === 1){
+        custom.getLastCookie(ctx, supabase).then((lastServedCookie) => {
+            const currentWeightOfLastServedCookie = Number(lastServedCookie[0]['cookies']['weight']) 
+            // do things if weight > 1
+            if (currentWeightOfLastServedCookie > 1){
+                let updatedWeight = Number(lastServedCookie[0]['cookies']['weight']) - 1;
+                custom.updateCookieWeight(lastServedCookie, updatedWeight, supabase)
+                .then(() => {
+                    menus.mainMenu(bot, ctx, `This cookie will be shown less often.
+What do you want to do next?`)                
+                    console.log(`Cookie weight decreased.`)
+                })
+                .then(()=>{
+                    custom.updateCookiePleaseFlag(ctx.from.id, 0, supabase)
+                })
+                .then(()=> {
+                    ctx.state[0].on_cookie_please = 0;
+                    console.log(`After adding cookie, on_cookie_please flag set to: ${ctx.state[0].on_cookie_please}`);
+                });                 
+            }
+            // do nothing except set updateCookiePleaseFlag to 0
+            else {
+                custom.updateCookiePleaseFlag(ctx.from.id, 0, supabase);
+                console.log(`Cookie weight already 1.`)
+                ctx.reply(`The cookie is already at lowest frequency.
+The ability to delete cookies will be added in the future 🙂`)
+            }       
+        });
+    } else if (ctx.state[0].on_cookie_please === 0){
+        ctx.reply(`Please change the frequency the next time you see this cookie.`)
+    }  
+    next(ctx);
+});
+
 //?## INLINE MENU ACTIONS- End ###
 
 //? ### TEXT COMMANDS ###
 // Normal text commands handled with `hears`
 // NOTE: to user hear in a group chat, disable bot from bot father
-
-    // //* ### Trying quests out for cookie please command
-    // const strQuest1 = ctx.state.quest1;
-    // const strForQuest1RegEx = `^\\s*(\\b`+`${strQuest1}`+`\\b)*\\s*`;
-    // const quest1RegEx = new RegExp(strForQuest1RegEx + `\\bcookie\\b\\s*\\bplease\\b\\s*$`);
-    // let arrCookiePleaseRegEx = [];
-    // arrCookiePleaseRegEx.push(quest1RegEx)
-    // console.log(arrCookiePleaseRegEx);
-    // // const arrCookiePleaseRegEx = [/^\s*(\bcoding\b)*\s*\bcookie\b\s*\bplease\b\s*$/i];
-    // bot.hears(arrCookiePleaseRegEx, (ctx,next) => {
-    //     console.log(`Dynamic quests are now possible! Maybe! Hehe!`)
-    // });
 
 //* ### Cookie please command
 const arrCookiePleasePhrases = [`cookie please`, `cookie`, `cookie plz`,`cookie pls`,
@@ -317,7 +373,7 @@ bot.hears(arrUpdateWeightRegEx,(ctx, next) => {
         // remove all whitespace acorss the string
         const stringMessage = ctx.message.text.replace(/\s/g, "");
         let change = 0;
-        const weightLastServedCookie = Number(lastServedCookie[0]['cookies']['weight']);
+        const currentWeightOfLastServedCookie = Number(lastServedCookie[0]['cookies']['weight']);
         let updatedWeight = Number(lastServedCookie[0]['cookies']['weight']);
         console.log(`updated weight initialized to ${updatedWeight}`)
         
@@ -330,10 +386,10 @@ bot.hears(arrUpdateWeightRegEx,(ctx, next) => {
             } // handle valid cases
             else {
                 change = Number(stringMessage.match(regEx));
-                updatedWeight = Number(weightLastServedCookie) + Number(change);
+                updatedWeight = Number(currentWeightOfLastServedCookie) + Number(change);
                 // weight can never be negative or zero
                 if (updatedWeight <= 0){
-                    ctx.reply(`Cookie weighs ${weightLastServedCookie} and can't weigh ${updatedWeight}.
+                    ctx.reply(`Cookie weighs ${currentWeightOfLastServedCookie} and can't weigh ${updatedWeight}.
 The ability to delete cookies will be added in the future.`);
                 } //handle positive case
                 else if (regEx.test(stringMessage) && i === 0){
@@ -341,24 +397,19 @@ The ability to delete cookies will be added in the future.`);
                     custom.updateCookieWeight(lastServedCookie, updatedWeight, supabase).then(() => {
                         console.log(`Cookie weight increased.`)
                     });
-                    ctx.reply(`Weight increased from ${weightLastServedCookie} to ${updatedWeight}`);
+                    ctx.reply(`Weight increased from ${currentWeightOfLastServedCookie} to ${updatedWeight}`);
                 } // handle valid negative case
                 else if (regEx.test(stringMessage) && i === 1 && updatedWeight > 0){
                     custom.updateCookieWeight(lastServedCookie, updatedWeight, supabase).then(() => {
                         console.log(`Cookie weight decreased.`)
                     });
-                    ctx.reply(`Weight reduced from ${weightLastServedCookie} to ${updatedWeight}`);
+                    ctx.reply(`Weight reduced from ${currentWeightOfLastServedCookie} to ${updatedWeight}`);
                 }
             }
         }); // foreach ends
     }); // then ends
     next(ctx);
 });
-
-
-
-
-
 
 
 // 
