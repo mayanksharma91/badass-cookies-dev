@@ -1,29 +1,45 @@
 const menus = require("./menus_lib");
 
 //? ### TEXT THAT IS SENT TO USER
-const startMessage = `*Welcome to your Badass Cookie Jar!*
+const startMessage = `*Welcome to your Cookie Jar!*
 
 Your wins, big and small, are cookies 🍪
 
 When you're feeling down, do the following:
     1️⃣ Ask for a cookie 🍪
-    2️⃣ Read cookie and feel amazing 💪
-    3️⃣ Resume badassery! 😎
+    2️⃣ Feel amazing 💪
+    3️⃣ Do something cool! 😎
+    4️⃣ Add it as a cookie 🍪
     
-Type \`/help\` if you're feeling lost`;
+Type _/help_ if you're feeling lost.
+
+Let's get started!`;
+
+// const helpMessage = `Your wins, big and small, are cookies 🍪
+
+// *To add a cookie* send:
+// \`add cookie <cookie text here>\`
+// Eg. add cookie I had never coded in my life. 3 weeks later, I built this bot!
+
+// Feeling down? *To request a cookie* send:
+// \`cookie please\`
+
+// Like the 🍪? Send \`+1\` or \`-1\` to modify *how often you see this cookie*.
+
+// Add five cookies to get started!`
 
 const helpMessage = `Your wins, big and small, are cookies 🍪
 
-*To add a cookie* send:
-\`add cookie <cookie text here>\`
-Eg. add cookie I had never coded in my life. 3 weeks later, I built this bot!
+Press _Add Cookie_ and type your win!
 
-Felling down? *To request a cookie* send:
-\`cookie please\`
+Feeling down? Press _Cookie Please_. We'll show you a win from your past!
 
-Like the 🍪? Send \`+1\` or \`-1\` to modify *how often you see this cookie*.
+When you see a cookie 🍪, you can adjust how often you see it pressing ☺ or 😐
+This is optional.
 
-Add five cookies to get started!`
+If the below menu ever disappears type _/menu_
+
+To see this section again, just type _/help_`
 
 const cookiePleaseMessageWhenNoCookieAdded = `No cookies added!
 
@@ -32,7 +48,33 @@ const cookiePleaseMessageWhenNoCookieAdded = `No cookies added!
 Eg. add cookie I had never coded in my life. 3 weeks later, I built this bot!`;
 
 
+const arrSlashCommands = [`/help`,`/menu`,`/start`,`/settings`];
+
 //? ### FUNCTIONS
+
+const readUserDetails = async(ctx, supabase) => {
+    const { data, error } = await supabase
+        .from(`user_details`)
+        .select(`
+                user_id_telegram,
+                username_telegram,
+                first_name_telegram,
+                last_name_telegram,
+                type_telegram,
+                last_served_cookie_id,
+                on_add_cookie,
+                on_cookie_please`
+                )
+        .eq(`user_id_telegram`, ctx.from.id);
+    if (error) {
+        console.error(error);
+        return;
+    }
+    // set state property of ctx object for use across commands
+    ctx.state = data;
+    return data;
+}
+
 function getRandomCookie(cookies, ctx, supabase, bot){
     console.log(`length of cookies: ${cookies.length}`)
     // Takes in array of cookie objects and returns a single cookie as string    
@@ -233,6 +275,7 @@ const insertCookie = async(cookieString, ctx, supabase) => {
 //? EXPORTING MODULES
 module.exports = {
     //*functions 
+    readUserDetails,
     getRandomCookie,
     getRandInteger,
     //* messages as constants
@@ -244,5 +287,6 @@ module.exports = {
     updateCookieWeight,
     updateAddCookieFlag,
     insertCookie,
-    updateCookiePleaseFlag
+    updateCookiePleaseFlag,
+    arrSlashCommands
 };

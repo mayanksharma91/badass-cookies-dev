@@ -1,20 +1,19 @@
 
 // Menu for when a user presses 'Add cookie' in either mainMenu or helpMenuForStart
 function addCookieTypeMenu(bot, ctx){
-    const messageString = `Please type your cookie.
-If you don't want to, click *Back to menu*`
+    const messageString = `Type your cookie.`
     bot.telegram.sendMessage(ctx.chat.id, `${messageString}`, {
         parse_mode: 'Markdown',        
         reply_markup: {
             inline_keyboard: [
-                [
-                    { text: `Just any cookie`, callback_data: `add cookie`}
-                ],
-                [
-                    { text: `Custom 1 cookie`, callback_data: `add custom 1 cookie`},
-                    { text: `Custom 2 cookie`, callback_data: `add custom 2 cookie`},
-                    { text: `Custom 3 cookie`, callback_data: `add custom 3 cookie`}
-                ],
+                // [
+                //     { text: `Just any cookie`, callback_data: `add cookie`}
+                // ],
+                // [
+                //     { text: `Custom 1 cookie`, callback_data: `add custom 1 cookie`},
+                //     { text: `Custom 2 cookie`, callback_data: `add custom 2 cookie`},
+                //     { text: `Custom 3 cookie`, callback_data: `add custom 3 cookie`}
+                // ],
                 [
                     { text: `Back to menu`, callback_data: `main menu`}
                 ]
@@ -30,7 +29,7 @@ function cookiePleaseMenu (bot, ctx, messageString){
             inline_keyboard: [
                 [
                     { text: `☺`, callback_data: `+1`},
-                    { text: `🙂`, callback_data: `+0`},
+                    // { text: `🙂`, callback_data: `+0`},
                     { text: `😐`, callback_data: `-1`}
                 ],
                 [

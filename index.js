@@ -34,14 +34,20 @@ const menus = require("./menus_lib.js");
 // /start, /help, /settings are core commands in telegraf
 //* Handler for the /start command
 bot.start((ctx, next) => {
+    console.log(`-----> Entered /start`);    
     custom.getUserIDExistsFromSupabase(ctx,supabase).then(count =>{
         if(count !== 0){
             console.log(`user already exists`);
-            // using a series of setTimeouts to ensure they appear in a deterministic order
-            setTimeout(() => {ctx.reply(`${custom.startMessage}`,{parse_mode: 'Markdown'})},0);
-            setTimeout(() => {ctx.reply(`${custom.helpMessage}`,{parse_mode: 'Markdown'})},10);
             //* Creating interactive menu
-            setTimeout(() => {menus.helpMenuForStart(bot, ctx)},30);
+            menus.mainMenu(bot, ctx, custom.startMessage);
+            // // killing expectation for cookie text
+            // if (ctx.state[0].on_add_cookie === 1) {
+            //     custom.updateAddCookieFlag(ctx.from.id, 0, supabase);
+            // }
+            // // killing expectation of updating cookie weight
+            // if (ctx.state[0].on_cookie_please === 1) {
+            //     custom.updateCookiePleaseFlag(ctx.from.id, 0, supabase);
+            // }
         } else {
             // if id is not in table, add it to table
             console.log(`count: ${count}`);
@@ -61,7 +67,7 @@ bot.start((ctx, next) => {
             
             insertUserID()
             .then(() => {ctx.reply(`${custom.startMessage}`,{parse_mode: 'Markdown'});})
-            .then(() => {ctx.reply(`${custom.helpMessage}`,{parse_mode: 'Markdown'});})           
+            // .then(() => {ctx.reply(`${custom.helpMessage}`,{parse_mode: 'Markdown'});})           
             //* Creating interactive menu
             .then(() => {menus.helpMenuForStart(bot, ctx);});  
         }
@@ -71,8 +77,24 @@ next(ctx);
 
 //* Handler for the /help command
 bot.help((ctx, next) => {
-ctx.reply(`${custom.helpMessage}`,{parse_mode: 'Markdown'});
-next(ctx);
+
+    try{
+        // killing expectation for cookie text
+        if (ctx.state[0].on_add_cookie === 1) {
+            custom.updateAddCookieFlag(ctx.from.id, 0, supabase);
+        }
+        // killing expectation of updating cookie weight
+        if (ctx.state[0].on_cookie_please === 1) {
+            custom.updateCookiePleaseFlag(ctx.from.id, 0, supabase);
+        }
+    }
+    catch (err){
+        console.log(err);
+    }
+    finally{
+        menus.mainMenu(bot, ctx,`${custom.helpMessage}`);
+        next(ctx);
+    }
 })
 
 //* Handler for the /settings command
@@ -82,7 +104,7 @@ add custom quests
 set custom quest names
 */
 bot.settings((ctx, next) =>{
-ctx.reply(`It's YOUR cookie jar. Set it up how you need it!`);
+ctx.reply(`We are working on giving you more control of your cookie jar!`);
 next(ctx);
 })
 
@@ -98,48 +120,28 @@ next(ctx);
 
 bot.use((ctx, next) => {
     console.log(`-----> Entered bot.use`);
-    const readUserDetails = async() => {
-        const { data, error } = await supabase
-            .from(`user_details`)
-            .select(`
-                    user_id_telegram,
-                    username_telegram,
-                    first_name_telegram,
-                    last_name_telegram,
-                    type_telegram,
-                    last_served_cookie_id,
-                    on_add_cookie,
-                    on_cookie_please`
-                    )
-            .eq(`user_id_telegram`, ctx.from.id);
-        if (error) {
-            console.error(error);
-            return;
-        }
-        // set state property of ctx object for use across commands
-        ctx.state = data;
-        return data;
-    }
-    readUserDetails().then(()=>{
+    custom.readUserDetails(ctx, supabase).then(()=>{
         console.log(ctx.state);
-        // if a cookie is expected from the user
-        if (ctx.state[0].on_add_cookie === 1){
-            console.log(`Succesfully handled adding cookie as next message.`);
-            // add the cookie
-            custom.insertCookie(ctx.message.text, ctx, supabase)
-            .then(()=>{
-                menus.mainMenu(bot,ctx,`Cookie added!
-What would you like to do now?`);
-            })
-            // set on_add_cookie flag and ctx.state to 0 since we no longer expect a cookie
-            .then(()=>{
-                custom.updateAddCookieFlag(ctx.from.id, 0, supabase)
-                .then(()=> {
-                    ctx.state[0].on_add_cookie = 0;
-                    console.log(`After adding cookie, on_add_cookie flag set to: ${ctx.state[0].on_add_cookie}`);
+        // if a cookie is expected from the user and it was not a callback function call
+        if (ctx.state[0].on_add_cookie === 1 && !(typeof ctx.message === 'undefined')){
+            // if it was not a slash command 
+            const slashRegEx = /^\s*\//g
+            if (!slashRegEx.test(ctx.message.text)){
+                // add the cookie
+                custom.insertCookie(ctx.message.text, ctx, supabase)
+                .then(()=>{
+                    menus.mainMenu(bot,ctx,`Cookie added!`);
                 })
-            })
-        } 
+                // set on_add_cookie flag and ctx.state to 0 since we no longer expect a cookie
+                .then(()=>{
+                    custom.updateAddCookieFlag(ctx.from.id, 0, supabase)
+                    .then(()=> {
+                        ctx.state[0].on_add_cookie = 0;
+                        console.log(`After adding cookie, on_add_cookie flag set to: ${ctx.state[0].on_add_cookie}`);
+                    })
+                })
+            }
+        }
     next(ctx);
     });
 })
@@ -148,7 +150,7 @@ What would you like to do now?`);
 //?## INLINE MENU ACTIONS- Begin ###
 // Educational note:
 // next(cxt) passes cxt object the next handler so you can modify properties like `state`
-bot.command(`Menu`,(ctx, next) =>{
+bot.command(`menu`,(ctx, next) =>{
     //* Creating interactive menu
     menus.mainMenu(bot, ctx, `Main Menu`)
     next(ctx);
@@ -180,9 +182,8 @@ bot.action(`add cookie`, (ctx, next) =>{
 //* Main Menu - Interactive
 bot.action(`main menu`, (ctx, next) =>{
     // deletes last message we sent
-    // ctx.deleteMessage();    
+    // ctx.deleteMessage();
     ctx.answerCbQuery();
-    //TODO add code to set addCookie flag in database = 0
     custom.updateAddCookieFlag(ctx.from.id, 0, supabase)
     .then(()=>{
         //* Creating interactive menu
@@ -238,8 +239,8 @@ bot.action(`+1`, (ctx, next) =>{
             let updatedWeight = Number(lastServedCookie[0]['cookies']['weight']) + 1;
             custom.updateCookieWeight(lastServedCookie, updatedWeight, supabase)
             .then(() => {
-                menus.mainMenu(bot, ctx, `Great! This cookie will be shown more often.
-What do you want to do next?`)
+                menus.mainMenu(bot, ctx, `Great!
+This cookie will be shown more often.`)
                 console.log(`Cookie weight increased.`)
             })
             .then(()=>{
@@ -251,9 +252,7 @@ What do you want to do next?`)
             });       
         });
     } else if (ctx.state[0].on_cookie_please === 0){
-        menus.mainMenu(bot, ctx, `Please change the frequency the next time you see this cookie 🙂.
-
-What do you want to do next?`);
+        menus.mainMenu(bot, ctx, `Please change the frequency the next time you see this cookie 🙂.`);
     }  
     ctx.answerCbQuery();
     next(ctx);
@@ -271,8 +270,7 @@ bot.action(`-1`, (ctx, next) =>{
                 let updatedWeight = Number(lastServedCookie[0]['cookies']['weight']) - 1;
                 custom.updateCookieWeight(lastServedCookie, updatedWeight, supabase)
                 .then(() => {
-                    menus.mainMenu(bot, ctx, `This cookie will be shown less often.
-What do you want to do next?`)                
+                    menus.mainMenu(bot, ctx, `This cookie will be shown less often.`)                
                     console.log(`Cookie weight decreased.`)
                 })
                 .then(()=>{
@@ -287,14 +285,12 @@ What do you want to do next?`)
             else {
                 custom.updateCookiePleaseFlag(ctx.from.id, 0, supabase);
                 console.log(`Cookie weight already 1.`)
-                menus.mainMenu(bot,ctx,`The cookie is already at lowest frequency.
-The ability to delete cookies will be added in the future 🙂`);
+                menus.mainMenu(bot,ctx,`This cookie is already at lowest frequency.
+The ability to delete cookies will be added in the future 🙂\n`);
             }       
         });
     } else if (ctx.state[0].on_cookie_please === 0){
-        menus.mainMenu(bot,ctx,`Please change the frequency the next time you see this cookie.
-
-What do you want to do next?`)
+        menus.mainMenu(bot,ctx,`Please change the frequency the next time you see this cookie.`)
     }  
     ctx.answerCbQuery();
     next(ctx);
