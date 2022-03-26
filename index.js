@@ -18,7 +18,18 @@ const {Telegraf} = require('telegraf');
 // read here - https://stackoverflow.com/questions/38660022/curly-brackets-braces-in-node-js-require-statement
 
 // creating a bot from the telegraf package
-const bot = new Telegraf(process.env.BOT_API_KEY);
+// const bot = new Telegraf(process.env.BOT_API_KEY);
+
+// for deploying to heroku
+const API_TOKEN = process.env.BOT_API_KEY || '';
+const PORT = process.env.PORT || 3000;
+const URL = process.env.URL || 'https://badass-cookies-dev.herokuapp.com/';
+
+// creating a bot from the telegraf package
+const bot = new Telegraf(API_TOKEN);
+
+bot.telegram.setWebhook(`${URL}/bot${API_TOKEN}`);
+bot.startWebhook(`/bot${API_TOKEN}`, null, PORT)
 
 // reading functions and constants from custom_lib.js
 const custom = require("./custom_lib");
