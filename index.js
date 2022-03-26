@@ -440,9 +440,13 @@ The ability to delete cookies will be added in the future.`);
 
 // ### LAUNCH BOT ###
 console.log(`##### BOT STARTED #####`)
-bot.launch()
-// graceful stop
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
+
+module.exports = bot
+
+//* Commented for Heroku deployment
+// bot.launch()
+// // graceful stop
+// process.once('SIGINT', () => bot.stop('SIGINT'));
+// process.once('SIGTERM', () => bot.stop('SIGTERM'));
 
 
