@@ -441,7 +441,7 @@ The ability to delete cookies will be added in the future.`);
 // ### LAUNCH BOT ###
 console.log(`##### BOT STARTED #####`)
 
-module.exports = bot
+bot.startPolling();
 
 //* Commented for Heroku deployment
 // bot.launch()
