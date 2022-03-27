@@ -445,8 +445,8 @@ console.log(`##### BOT STARTED #####`)
 
 //* Commented for Heroku deployment
 bot.launch()
-// // graceful stop
-// process.once('SIGINT', () => bot.stop('SIGINT'));
-// process.once('SIGTERM', () => bot.stop('SIGTERM'));
+// graceful stop
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
 
 
