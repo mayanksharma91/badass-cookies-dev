@@ -26,7 +26,7 @@ const PORT = process.env.PORT || 3000;
 const URL = process.env.URL || 'https://badass-cookies-dev.herokuapp.com/';
 
 // creating a bot from the telegraf package
-const bot = new Telegraf(API_TOKEN);
+const bot = new Telegraf(API_TOKEN,{ polling: true });
 
 // bot.telegram.setWebhook(`${URL}/bot${API_TOKEN}`);
 // bot.startWebhook(`/bot${API_TOKEN}`, null, PORT);
