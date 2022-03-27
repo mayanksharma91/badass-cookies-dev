@@ -28,8 +28,8 @@ const URL = process.env.URL || 'https://badass-cookies-dev.herokuapp.com/';
 // creating a bot from the telegraf package
 const bot = new Telegraf(API_TOKEN);
 
-bot.telegram.setWebhook(`${URL}/bot${API_TOKEN}`);
-bot.startWebhook(`/bot${API_TOKEN}`, null, PORT)
+// bot.telegram.setWebhook(`${URL}/bot${API_TOKEN}`);
+// bot.startWebhook(`/bot${API_TOKEN}`, null, PORT);
 
 // reading functions and constants from custom_lib.js
 const custom = require("./custom_lib");
