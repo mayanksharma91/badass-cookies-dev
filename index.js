@@ -133,24 +133,26 @@ bot.use((ctx, next) => {
     console.log(`-----> Entered bot.use`);
     custom.readUserDetails(ctx, supabase).then(()=>{
         console.log(ctx.state);
-        // if a cookie is expected from the user and it was not a callback function call
-        if (ctx.state[0].on_add_cookie === 1 && !(typeof ctx.message === 'undefined')){
-            // if it was not a slash command 
-            const slashRegEx = /^\s*\//g
-            if (!slashRegEx.test(ctx.message.text)){
-                // add the cookie
-                custom.insertCookie(ctx.message.text, ctx, supabase)
-                .then(()=>{
-                    menus.mainMenu(bot,ctx,`Cookie added!`);
-                })
-                // set on_add_cookie flag and ctx.state to 0 since we no longer expect a cookie
-                .then(()=>{
-                    custom.updateAddCookieFlag(ctx.from.id, 0, supabase)
-                    .then(()=> {
-                        ctx.state[0].on_add_cookie = 0;
-                        console.log(`After adding cookie, on_add_cookie flag set to: ${ctx.state[0].on_add_cookie}`);
+        if (!(typeof ctx.state[0].on_add_cookie === 'undefined')){
+            // if a cookie is expected from the user and it was not a callback function call
+            if (ctx.state[0].on_add_cookie === 1 && !(typeof ctx.message === 'undefined')){
+                // if it was not a slash command 
+                const slashRegEx = /^\s*\//g
+                if (!slashRegEx.test(ctx.message.text)){
+                    // add the cookie
+                    custom.insertCookie(ctx.message.text, ctx, supabase)
+                    .then(()=>{
+                        menus.mainMenu(bot,ctx,`Cookie added!`);
                     })
-                })
+                    // set on_add_cookie flag and ctx.state to 0 since we no longer expect a cookie
+                    .then(()=>{
+                        custom.updateAddCookieFlag(ctx.from.id, 0, supabase)
+                        .then(()=> {
+                            ctx.state[0].on_add_cookie = 0;
+                            console.log(`After adding cookie, on_add_cookie flag set to: ${ctx.state[0].on_add_cookie}`);
+                        })
+                    })
+                }
             }
         }
     next(ctx);
@@ -441,9 +443,7 @@ The ability to delete cookies will be added in the future.`);
 // ### LAUNCH BOT ###
 console.log(`##### BOT STARTED #####`)
 
-// bot.startPolling();
-
-//* Commented for Heroku deployment
+// Educational: bot.startPolling() can't work with webhooks. Only one of the two works.
 bot.launch()
 // graceful stop
 process.once('SIGINT', () => bot.stop('SIGINT'));
