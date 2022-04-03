@@ -164,9 +164,17 @@ bot.use((ctx, next) => {
 // Educational note:
 // next(cxt) passes cxt object the next handler so you can modify properties like `state`
 bot.command(`menu`,(ctx, next) =>{
-    //* Creating interactive menu
-    menus.mainMenu(bot, ctx, `Main Menu`)
-    next(ctx);
+    // killing expectation of updating cookie weight
+    try{
+        if (ctx.state[0].on_cookie_please === 1) {
+        custom.updateCookiePleaseFlag(ctx.from.id, 0, supabase);
+        }
+    }
+    finally{
+        //* Creating interactive menu
+        menus.mainMenu(bot, ctx, `Main Menu`)
+        next(ctx);
+    }
 });
 
 //* Add cookie
