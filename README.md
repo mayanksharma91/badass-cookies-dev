@@ -25,9 +25,10 @@
 ## To do list for MVP - prioritized
 --- test /start message order for new user
 
----- Deploy on Herkou
-- see youtube video 
-- use pm2 
+--- Add ability for user to delete cookie
+    --- Can use same flag as cookie please to trigger delete.
+    --- Will update a flag called delted in cookies table
+    --- Will need to filter deleted cookies before creating sampling array for cookie please
 
 --- create a user_action_log table in supabase:
 each row will have:
