@@ -1,51 +1,19 @@
 # badass-cookies
 
-## Dependencies
+A cookie jar inspired by David Goggins. Write down your daily wins (cookies) in this Telegram chatbot. When you're feeling down, ask for a cookie. Feel pumped. Get back to being awesome and new wins!
+
+When you see a cookie, you can ask for it to be shown more/less frequently.
+
+Currently the bot is only text. I'm working on adding image support. A web front end should also be available this summer.
+
+You can visit the website at https://thetinywins.carrd.co/
+
+## The bot is currently non-functional since Heroku stopped offering free plans. I'm working on migrating it to another backend. Expect it to work again by June.
+
+#### For the nerds, technology used:
 - npm (used 8.5.2)
 - nodejs (used v16.14.0)
 - supabase-js
 - telegraf
 
 
-## Installations/terminal commands
-- `npm init -y`
-    - This created the package.json file with some config
-
-- `npm dotenv`
-    - Reads in .env file
-- Created added node file names to .gitignore using VS code plugin
-
-- `npm install telegraf --save`
-    - Installs a package library for Telegram and adds it to the package.json dependencies
-
-- `npm install @supabase/supabase-js`
-    - Installs supabase-js and creates a client
-
-
-## To do list for MVP - prioritized
---- test /start message order for new user
-
---- Add ability for user to delete cookie
-    --- Can use same flag as cookie please to trigger delete.
-    --- Will update a flag called delted in cookies table
-    --- Will need to filter deleted cookies before creating sampling array for cookie please
-
---- create a user_action_log table in supabase:
-each row will have:
-user.id, telegram_user_id,
-time of their message, their message,
-bot reply, time of bot reply
-
----- Set up unicornplatform website
-- CTA captures user's name, email and takes user to telegram bot\
-
----- Buy badass-cookies.com /thetinywins.com
-- Point unicornplatform website to this domain
-
-! ### Product Backlog - unprioritized
----- Custom quests
-Column in user_details table that specifies number of quests created
-Columns for each quest in user_details OR a separate quests table 
-
----- Change variable name weight to frequency - currently confusing
-Ideally higher weight cookies, i.e. more important should be shown less to retain potency
