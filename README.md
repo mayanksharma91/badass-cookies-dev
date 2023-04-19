@@ -1,7 +1,7 @@
 # badass-cookies
 
 ## A cookie jar inspired by David Goggins.
-https://thetinywins.carrd.co/
+https://thetinywins.carrd.co/ (also contains demo video)
 
 Write down your daily wins (cookies) in this Telegram chatbot. When you're feeling down, ask for a cookie. Feel pumped. Get back to being awesome and new wins!
 
